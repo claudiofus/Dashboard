@@ -1,47 +1,36 @@
+var express = require('express');
 var http = require('http');
-var path = require('path');
-var fs = require('fs');
+var app = express();
+var server = http.createServer(app);
+var io = require('socket.io').listen(server);
 
-// Loading the index file . html displayed to the client
-var server = http.createServer(function (request, response) {
-    var filePath = request.url;
-    if (filePath === '/' || request.url === '/app.js') filePath = '\\views\\login.html';
+server.listen(8000);
 
-    filePath = __dirname + filePath;
-    var extname = path.extname(filePath);
-    var contentType = 'text/html';
+app.use(express.static(__dirname + '/public'));
 
-    switch (extname) {
-        case '.js':
-            contentType = 'text/javascript';
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-    }
+app.get('/', function (req, res) {
+    res.sendFile(__dirname + '/views/login.html');
+});
+app.get('/dashboard', function (req, res) {
+    res.sendFile(__dirname + '/views/dashboard.html');
+});
+app.get('/fatture', function (req, res) {
+    res.sendFile(__dirname + '/views/fatture.html');
+});
+app.get('/store', function (req, res) {
+    res.sendFile(__dirname + '/views/store.html');
+});
+app.get('/commissioni', function (req, res) {
+    res.sendFile(__dirname + '/views/commissioni.html');
+});
 
-    fs.exists(filePath, function (exists) {
-        if (exists) {
-            fs.readFile(filePath, function (error, content) {
-                if (error) {
-                    response.writeHead(500);
-                    response.end();
-                }
-                else {
-                    response.writeHead(200, {'Content-Type': contentType});
-                    response.end(content, 'utf-8');
-                }
-            });
+io.on('connection', function (socket) {
+    socket.on('tokenid', function (tokenId) {
+        if (tokenId && tokenId !== '') {
+            socket.tokenId = tokenId;
+            socket.emit('redirect', '/dashboard');
         }
     });
 });
 
-// Loading socket.io
-var io = require('socket.io').listen(server);
-
-// When a client connects, we note it in the console
-io.sockets.on('connection', function (socket) {
-    socket.emit('message', 'You are connected!');
-});
-
-server.listen(8000);
+module.exports = app;

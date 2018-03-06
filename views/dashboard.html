@@ -8,7 +8,7 @@
     <link rel="shortcut icon" href="/public/images/img.png">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link href="/public/stylesheets/style2.css" rel="stylesheet">
+    <link href="/stylesheets/style2.css" rel="stylesheet">
 
     <title>Dashboard</title>
 </head>
@@ -25,21 +25,21 @@
 
         <ul class="list-unstyled components">
             <li class="active">
-                <a href="dashboard.html">
+                <a href="/dashboard">
                     <i class="glyphicon glyphicon-home"></i>
                     Home
                 </a>
             </li>
             <li>
-                <a href="/views/fatture.html">
+                <a href="/fatture">
                     <i class="glyphicon glyphicon-euro"></i>
                     Fatture
                 </a>
-                <a href="/views/store.html">
+                <a href="/store">
                     <i class="glyphicon glyphicon-download"></i>
                     Venduto in store
                 </a>
-                <a href="commissioni.html">
+                <a href="/commissioni">
                     <i class="glyphicon glyphicon-scissors"></i>
                     Commissioni risparmiate
                 </a>
@@ -65,58 +65,56 @@
         </nav>
 
         <h2>Dashboard</h2>
-        <div class="container section-ourTeam">
-            <div class="row">
-                <div class="col-md-4 col-sm-4 col-xs-12">
-                    <div class="row section-success ourTeam-box text-center">
-                        <div class="col-md-12 section1">
-                            <a href="fatture.html">
-                                <img src="../public/images/euro.png">
-                            </a>
-                        </div>
-                        <div class="col-md-12 section2">
-                            <h1>FATTURE</h1><br>
-                        </div>
-                        <div class="col-md-12 section3">
-                            <p>
-                                Scarica le fatture di Amazon per il commercialista.
-                            </p>
-                        </div>
+        <div class="row">
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="ourTeam-box text-center">
+                    <div class="col-md-12 section1">
+                        <a href="/fatture">
+                            <img src="/images/euro.png">
+                        </a>
+                    </div>
+                    <div class="section2">
+                        <h1>FATTURE</h1><br>
+                    </div>
+                    <div class="section3">
+                        <p>
+                            Scarica le fatture di Amazon per il commercialista.
+                        </p>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-4 col-xs-12">
-                    <div class="row section-info ourTeam-box text-center">
-                        <div class="col-md-12 section1">
-                            <a href="store.html">
-                                <img src="../public/images/shop.png">
-                            </a>
-                        </div>
-                        <div class="col-md-12 section2">
-                            <h1>VENDUTO IN STORE</h1><br>
-                        </div>
-                        <div class="col-md-12 section3">
-                            <p>
-                                Scansiona il codice a barre del prodotto appena venduto e automaticamente verrà ridotta
-                                la quantità dal tuo inventario Amazon.
-                            </p>
-                        </div>
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="section-info ourTeam-box text-center">
+                    <div class="col-md-12 section1">
+                        <a href="/store">
+                            <img src="/images/shop.png">
+                        </a>
+                    </div>
+                    <div class="section2">
+                        <h1>VENDUTO IN STORE</h1><br>
+                    </div>
+                    <div class="section3">
+                        <p>
+                            Scansiona il codice a barre del prodotto appena venduto e automaticamente verrà ridotta
+                            la quantità dal tuo inventario Amazon.
+                        </p>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-4 col-xs-12">
-                    <div class="row section-danger ourTeam-box text-center">
-                        <div class="col-md-12 section1">
-                            <a href="commissioni.html">
-                                <img src="../public/images/percentage.png">
-                            </a>
-                        </div>
-                        <div class="col-md-12 section2">
-                            <h1>COMMISSIONI RISPARMIATE</h1>
-                        </div>
-                        <div class="col-md-12 section3">
-                            <p>
-                                Controlla quanto hai risparmiato in commissioni vendendo in store.
-                            </p>
-                        </div>
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="section-danger ourTeam-box text-center">
+                    <div class="col-md-12 section1">
+                        <a href="/commissioni">
+                            <img src="/images/percentage.png">
+                        </a>
+                    </div>
+                    <div class="section2">
+                        <h1>COMMISSIONI</h1>
+                    </div>
+                    <div class="section3">
+                        <p>
+                            Controlla quanto hai risparmiato in commissioni vendendo in store.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -128,12 +126,5 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
         integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('#sidebarCollapse').on('click', function () {
-            $('#sidebar').toggleClass('active');
-        });
-    });
-</script>
 </body>
 </html>
