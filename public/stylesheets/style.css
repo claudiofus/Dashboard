@@ -44,29 +44,11 @@ body {
     border-radius : 100%;
 }
 
-.login-form form p {
-    width      : 80%;
-    margin     : 5px auto 10px;
-    text-align : center;
-}
-
 .login-box hr {
     margin        : 10px auto 20px;
     width         : 70%;
     border-top    : 1px solid rgba(0, 0, 0, 0.13);
     border-bottom : 1px solid rgba(255, 255, 255, 0.15)
-}
-
-/* Login Form */
-.login-form input {
-    display       : block;
-    margin        : 0 auto 15px;
-    width         : 70%;
-    background    : #fefefe;
-    border        : 0;
-    color         : #6c6c6c;
-    padding       : 8px;
-    border-radius : 2px;
 }
 
 /* Login Button */
@@ -90,6 +72,8 @@ body {
 
 .login-links {
     text-align : center;
+    display: flex;
+    justify-content: center;
 }
 
 .login-links a {
