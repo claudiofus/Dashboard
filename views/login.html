@@ -6,14 +6,14 @@
     <meta name="description" content="Dashboard for Amazon">
     <meta name="author" content="Claudio Fusillo">
     <!--TODO remove in push-->
-    <meta name="google-signin-client_id" content="">
-    <link rel="shortcut icon" href="../public/images/img.png">
+    <meta name="google-signin-client_id"
+          content="">
+    <link rel="shortcut icon" href="/public/images/img.png">
 
     <title>Login</title>
-    <link href="/stylesheets/style.css" rel="stylesheet">
+    <link href="/public/stylesheets/style.css" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
 </head>
 <body>
 <!--https://developers.google.com/identity/sign-in/web/sign-in-->
@@ -22,10 +22,12 @@
         <div class="col-sm-6 col-md-4 col-sm-offset-3 col-md-offset-4">
             <div class="login-box clearfix">
                 <div class="login-logo">
-                    <img src="/images/img.png" alt="Company Logo">
+                    <img src="/public/images/img.png" alt="Company Logo">
                 </div>
                 <hr>
-                <div class="g-signin2 center login-links" data-onsuccess="onSignIn"></div>
+                <div>
+                    <button type="button" onclick="signIn()">ACCEDI</button>
+                </div>
                 <hr>
                 <div class="col-sm-12 col-md-12 text-center login-links">
                     <p style="color: white;">In caso di problemi all'accesso contattare <br/>
@@ -44,13 +46,12 @@
         crossorigin="anonymous"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    function onSignIn(googleUser) {
-        var idtoken = googleUser.getAuthResponse(true)['id_token'];
+    function signIn() {
         var socket = io.connect('http://localhost:8000');
-        socket.emit('tokenid', idtoken);
+        socket.emit('signIn');
 
-        socket.on('redirect', function (destination) {
-            window.location.href = destination;
+        socket.on('redirectLogin', function (url) {
+            window.location = url;
         });
     }
 </script>

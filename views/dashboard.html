@@ -8,7 +8,7 @@
     <link rel="shortcut icon" href="/public/images/img.png">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link href="/stylesheets/style2.css" rel="stylesheet">
+    <link href="/public/stylesheets/style2.css" rel="stylesheet">
 
     <title>Dashboard</title>
 </head>
@@ -70,7 +70,7 @@
                 <div class="ourTeam-box text-center">
                     <div class="col-md-12 section1">
                         <a href="/fatture">
-                            <img src="/images/euro.png">
+                            <img src="/public/images/euro.png">
                         </a>
                     </div>
                     <div class="section2">
@@ -87,7 +87,7 @@
                 <div class="section-info ourTeam-box text-center">
                     <div class="col-md-12 section1">
                         <a href="/store">
-                            <img src="/images/shop.png">
+                            <img src="/public/images/shop.png">
                         </a>
                     </div>
                     <div class="section2">
@@ -105,7 +105,7 @@
                 <div class="section-danger ourTeam-box text-center">
                     <div class="col-md-12 section1">
                         <a href="/commissioni">
-                            <img src="/images/percentage.png">
+                            <img src="/public/images/percentage.png">
                         </a>
                     </div>
                     <div class="section2">
@@ -126,5 +126,12 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
         integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+        });
+    });
+</script>
 </body>
 </html>

@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Dashboard for Amazon">
     <meta name="author" content="Claudio Fusillo">
-    <link rel="shortcut icon" href="/images/img.png">
+    <link rel="shortcut icon" href="/public/images/img.png">
 
     <title>Fatture</title>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link href="/stylesheets/style2.css" rel="stylesheet">
+    <link href="/public/stylesheets/style2.css" rel="stylesheet">
 </head>
 
 <body>
@@ -75,49 +75,37 @@
             <br/><u><b>Nel caso in cui siano state cancellate le relative mail, le fatture non verranno recuperate.</b></u>
         </p>
 
-        <p>Come funziona:<br/>
-            1) Effettuo il login dell'utente<br/>
-            2) Recupero ID dei messaggi dall'account di fatturazione<br/>
-            3) Recupero i messaggi<br/>
-            4) Recupero l'allegato di ogni messaggio
-        </p>
-
         <div class="line"></div>
-        <p style="color: darkred">
-            https://openclassrooms.com/courses/ultra-fast-applications-using-node-js/socket-io-let-s-go-to-real-time</p>
 
-        <form role="form">
+        <form role="form" novalidate>
             <div class="row">
                 <div class="col-sm-12 col-md-12">
                     <div class="col-sm-6 col-md-6">
-                        <form>
-                            <div class="group">
-                                <input type="text" id="date-start" required>
-                                <span class="highlight"></span>
-                                <span class="bar"></span>
-                                <label for="date-start">Data inizio</label>
-                            </div>
-                        </form>
+                        <div class="group">
+                            <input type="text" id="date-start" required>
+                            <span class="highlight"></span>
+                            <span class="bar"></span>
+                            <label for="date-start">Data inizio</label>
+                        </div>
                     </div>
                     <div class="col-sm-6 col-md-6">
-                        <form>
-                            <div class="group">
-                                <input type="text" id="date-end" required>
-                                <span class="highlight"></span>
-                                <span class="bar"></span>
-                                <label for="date-end">Data fine</label>
-                            </div>
-                        </form>
+                        <div class="group">
+                            <input type="text" id="date-end" required>
+                            <span class="highlight"></span>
+                            <span class="bar"></span>
+                            <label for="date-end">Data fine</label>
+                        </div>
                     </div>
                     <div class="col-sm-6 col-md-6">
-                        <form>
-                            <div class="group">
-                                <input type="text" id="email" required>
-                                <span class="highlight"></span>
-                                <span class="bar"></span>
-                                <label for="email">Indirizzo email</label>
-                            </div>
-                        </form>
+                        <div class="group">
+                            <input type="text" id="email" required>
+                            <span class="highlight"></span>
+                            <span class="bar"></span>
+                            <label for="email">Indirizzo email</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-6">
+                        <!--SELECT-->
                     </div>
                 </div>
             </div>
@@ -125,8 +113,8 @@
                 <div class="col-sm-12 col-md-12">
                     <div class="col-sm-6 col-md-6 col-sm-offset-6 col-md-offset-6">
                         <div class="form-group pull-right">
-                            <button id="cleanBtn" class="btn btn-primary" type="reset">PULISCI</button>
-                            <button id="downloadBtn" class="btn btn-primary">SCARICA</button>
+                            <button class="btn btn-primary" type="reset">PULISCI</button>
+                            <button class="btn btn-primary" onclick="getAttachment()">SCARICA</button>
                         </div>
                     </div>
                 </div>
@@ -140,8 +128,26 @@
         integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
 <script type="text/javascript" src="http://momentjs.com/downloads/moment-with-locales.min.js"></script>
-<script src="/javascripts/material.js"></script>
-<script src="/javascripts/datepicker.js"></script>
-<script src="/javascripts/sw.js"></script>
+<script src="/public/javascripts/material.js"></script>
+<script src="/public/javascripts/datepicker.js"></script>
+<script src="/public/javascripts/sw.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+    var socket = io.connect('http://localhost:8000');
+
+    $(document).ready(function () {
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+        });
+    });
+
+    function getAttachment() {
+        var startDate = document.getElementsByTagName("input")[0].value;
+        var endDate = document.getElementsByTagName("input")[1].value;
+        var email = document.getElementsByTagName("input")[2].value;
+        // var marketplace = document.getElementsByTagName("input")[3].value;
+        socket.emit('getAttachment', startDate, endDate, email);
+    }
+</script>
 </body>
 </html>
