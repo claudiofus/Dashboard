@@ -9,8 +9,7 @@
 
     <title>Fatture</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="/public/stylesheets/bootstrap.css">
     <link href="/public/stylesheets/style2.css" rel="stylesheet">
 </head>
 
@@ -46,7 +45,7 @@
                     <i class="glyphicon glyphicon-scissors"></i>
                     Commissioni risparmiate
                 </a>
-                <a href="">
+                <a href="/configurazioni">
                     <i class="glyphicon glyphicon-cog"></i>
                     Configurazioni
                 </a>
@@ -59,11 +58,10 @@
 
         <nav class="navbar navbar-default">
             <div class="container-fluid">
-
                 <div class="navbar-header">
                     <button type="button" id="sidebarCollapse" class="btn btn-info navbar-btn">
                         <i class="glyphicon glyphicon-menu-hamburger"></i>
-                        <span>Menu</span>
+                        MENU
                     </button>
                 </div>
             </div>
@@ -104,16 +102,50 @@
                             <label for="email">Indirizzo email</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-6">
-                        <!--SELECT-->
+                    <div class="col-sm-6">
+                        <div class="group">
+                            <label>Marketplace</label>
+                        </div>
+                        <ul class="noBullet">
+                            <li class="list__item">
+                                <label class="label--checkbox">
+                                    <input type="checkbox" class="checkbox">
+                                    Italia
+                                </label>
+                            </li>
+                            <li class="list__item">
+                                <label class="label--checkbox">
+                                    <input type="checkbox" class="checkbox">
+                                    Germania
+                                </label>
+                            </li>
+                            <li class="list__item">
+                                <label class="label--checkbox">
+                                    <input type="checkbox" class="checkbox">
+                                    Francia
+                                </label>
+                            </li>
+                            <li class="list__item">
+                                <label class="label--checkbox">
+                                    <input type="checkbox" class="checkbox">
+                                    Spagna
+                                </label>
+                            </li>
+                            <li class="list__item">
+                                <label class="label--checkbox">
+                                    <input type="checkbox" class="checkbox">
+                                    Inghilterra
+                                </label>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            <div class="row">
+            <div class="row" style="margin-top: 10px;">
                 <div class="col-sm-12 col-md-12">
-                    <div class="col-sm-6 col-md-6 col-sm-offset-6 col-md-offset-6">
+                    <div class="col-sm-5 col-md-5 col-sm-offset-6 col-md-offset-6">
                         <div class="form-group pull-right">
-                            <button class="btn btn-primary" type="reset">PULISCI</button>
+                            <button class="btn btn-primary" type="reset">RESET</button>
                             <button class="btn btn-primary" onclick="getAttachment()">SCARICA</button>
                         </div>
                     </div>
@@ -121,32 +153,65 @@
             </div>
         </form>
     </div>
+    </form>
+    <a id="downloadPdf"></a>
+</div>
 </div>
 <!--https://github.com/T00rk/bootstrap-material-datetimepicker-->
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
-        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-        crossorigin="anonymous"></script>
-<script type="text/javascript" src="http://momentjs.com/downloads/moment-with-locales.min.js"></script>
+<script src="/public/javascripts/jquery.js"></script>
+<script src="/public/javascripts/bootstrap.js"></script>
+<script src="/public/javascripts/momentjs.js"></script>
 <script src="/public/javascripts/material.js"></script>
 <script src="/public/javascripts/datepicker.js"></script>
 <script src="/public/javascripts/sw.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script type="text/javascript">
-    var socket = io.connect('http://localhost:8000');
+    var socket = io.connect();
 
     $(document).ready(function () {
-        $('#sidebarCollapse').on('click', function () {
-            $('#sidebar').toggleClass('active');
+        socket.on('emitPDF', function (b64Data) {
+            var isChrome = !!window.chrome && !!window.chrome.webstore;
+            var downloadURL = 'data:application/pdf;base64,' + b64Data;
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                var byteCharacters = atob(b64Data);
+                var byteNumbers = new Array(byteCharacters.length);
+                for (var i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                var byteArray = new Uint8Array(byteNumbers);
+                var blob = new Blob([byteArray], {type: 'application/pdf'});
+                window.navigator.msSaveOrOpenBlob(blob, "Fattura");
+            } else if (isChrome) {
+                var link = document.getElementById('downloadPdf');
+                link.download = "Fattura";
+                link.href = downloadURL;
+                link.click();
+            } else { // Directly use base 64 encoded data for rest browsers (not IE)
+                window.open(downloadURL, '_blank');
+            }
+        });
+
+        socket.on('sendError', function (error) {
+            alert('Si è verificato un errore: ' + error);
         });
     });
 
     function getAttachment() {
-        var startDate = document.getElementsByTagName("input")[0].value;
-        var endDate = document.getElementsByTagName("input")[1].value;
-        var email = document.getElementsByTagName("input")[2].value;
-        // var marketplace = document.getElementsByTagName("input")[3].value;
-        socket.emit('getAttachment', startDate, endDate, email);
+        if ($("input[type=checkbox]:checked").length === 0) {
+            alert('E\' necessario selezionare almeno un marketplace per scaricare le fatture.');
+            return false;
+        }
+
+        socket.emit('getAttachment', {
+            startDate: document.getElementsByTagName("input")[0].value,
+            endDate: document.getElementsByTagName("input")[1].value,
+            email: document.getElementsByTagName("input")[2].value,
+            it: document.getElementsByTagName("input")[3].checked,
+            de: document.getElementsByTagName("input")[4].checked,
+            fr: document.getElementsByTagName("input")[5].checked,
+            es: document.getElementsByTagName("input")[6].checked,
+            uk: document.getElementsByTagName("input")[7].checked
+        });
     }
 </script>
 </body>

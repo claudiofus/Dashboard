@@ -42,6 +42,9 @@ app.get('/store', function (req, res) {
 app.get('/commissioni', function (req, res) {
     res.sendFile(__dirname + '/views/commissioni.html');
 });
+app.get('/configurazioni', function (req, res) {
+    res.sendFile(__dirname + '/views/configurazioni.html');
+});
 
 app.get('/oauth2callback', function (req, res) {
     oauth2Client.getToken(req.query.code, function (err, tokens) {
@@ -50,9 +53,11 @@ app.get('/oauth2callback', function (req, res) {
             oauth2Client.setCredentials(tokens);
         }
     });
+
     google.options({
         auth: oauth2Client
     });
+
     res.sendFile(__dirname + '/views/dashboard.html');
 });
 
@@ -61,39 +66,30 @@ io.on('connection', function (socket) {
         socket.emit('redirectLogin', url);
     });
 
-    socket.on('getAttachment', function (startDate, endDate, email) {
-        getMessagesID(startDate, endDate, function (messages) {
-            for (var i = 0; i < messages.length; i++) {
-                var message = messages[i];
-                getMessage(message.id, function (parts) {
-                    if (parts) {
-                        for (j = 0; j < parts.length; j++) {
-                            if (parts[j].mimeType === "application/pdf") {
-                                getAttachment(message.id, parts[j].body.attachmentId, function (downloadedPdf) {
-                                    console.log(downloadedPdf);
-                                    var pdf = downloadedPdf;
-                                });
-                            }
-                        }
-                    }
-                });
-            }
-        });
+    socket.on('getAttachment', function (params) {
+        getMessagesID(params, getMessage);
     });
 });
 
-function getMessagesID(startDate, endDate, callback) {
+function getMessagesID(params, callback) {
     // TODO INSERIRE CONTROLLI SUI PARAMETRI IN INGRESSO
     var query = '';
-    if (startDate) query += ' after:' + startDate.split('/').reverse().join('/') + ' ';
-    if (endDate) query += ' before:' + endDate.split('/').reverse().join('/') + ' ';
+    if (params.it) query += 'from:marketplace-messages@amazon.it';
+    if (params.de) query += ' || from:marketplace-messages@amazon.de';
+    if (params.fr) query += ' || from:marketplace-messages@amazon.fr';
+    if (params.es) query += ' || from:marketplace-messages@amazon.es';
+    if (params.uk) query += ' || from:marketplace-messages@amazon.co.uk';
+    if (params.startDate) query += ' after:' + params.startDate.split('/').reverse().join('/') + ' ';
+    if (params.endDate) query += ' before:' + params.endDate.split('/').reverse().join('/') + ' ';
+
     gmail.users.messages.list({
         userId: 'me',
-        q: 'from:marketplace-messages@amazon.it' + query
+        q: query,
+        includeSpamTrash: true
     }, function (err, response) {
         if (err) {
             console.log('The API returned an error: ' + err);
-            return;
+            io.sockets.emit('sendError', errorMapper(err.code));
         }
         var messages = [];
         if (response.data.messages.length === 0) {
@@ -101,7 +97,9 @@ function getMessagesID(startDate, endDate, callback) {
         } else {
             messages = response.data.messages;
         }
-        return callback(messages);
+        for (var i = 0; i < messages.length; i++) {
+            callback(messages[i].id, getAttachment);
+        }
     });
 }
 
@@ -112,14 +110,19 @@ function getMessage(messageID, callback) {
     }, function (err, response) {
         if (err) {
             console.log('The API returned an error: ' + err);
-            return callback();
+            io.sockets.emit('sendError', errorMapper(err.code));
         }
 
-        return callback(response.data.payload.parts);
+        var parts = response.data.payload.parts;
+        for (var j = 0; j < parts.length; j++) {
+            if (parts[j].mimeType === "application/pdf") {
+                callback(messageID, parts[j].body.attachmentId);
+            }
+        }
     });
 }
 
-function getAttachment(messageID, attachmentID, callback) {
+function getAttachment(messageID, attachmentID) {
     gmail.users.messages.attachments.get({
         userId: 'me',
         messageId: messageID,
@@ -127,13 +130,19 @@ function getAttachment(messageID, attachmentID, callback) {
     }, function (err, response) {
         if (err) {
             console.log('The API returned an error: ' + err);
-            return callback();
+            io.sockets.emit('sendError', errorMapper(err.code));
         }
 
-        var pdfBase64 = response.data.data;
-        var pdfDownload = Buffer.from(pdfBase64.toString('utf-8'), 'base64');
-        return callback(pdfDownload);
+        var pdfBase64 = response.data.data.replace(/-/g, '+').replace(/_/g, '/');
+        io.sockets.emit('emitPDF', pdfBase64);
     });
+}
+
+function errorMapper(code) {
+    switch (code) {
+        case 401:
+            return "E' necessario effettuare il login."
+    }
 }
 
 module.exports = app;
