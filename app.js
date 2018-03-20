@@ -1,5 +1,6 @@
 var express = require('express');
 var http = require('http');
+var fs = require('fs');
 var app = express();
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
@@ -7,12 +8,13 @@ var {google} = require('googleapis');
 var OAuth2 = google.auth.OAuth2;
 var gmail = google.gmail('v1');
 
-//TODO REMOVE CLIENTID
+//TODO CREARE OAUTH2 USANDO IL FILE CONF.JSON
 var oauth2Client = new OAuth2(
 
 );
 
 var scopes = ['https://www.googleapis.com/auth/gmail.readonly'];
+var filePath = __dirname + '/config.json';
 var url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes
@@ -63,11 +65,42 @@ app.get('/oauth2callback', function (req, res) {
 
 io.on('connection', function (socket) {
     socket.on('signIn', function () {
-        socket.emit('redirectLogin', url);
+        fs.readFile(filePath, 'utf8', function (err, data) {
+            if (err) {
+                console.log('Il file non esiste!');
+            }
+            var conf = JSON.parse(data);
+            conf.redirect_uri = url;
+            socket.emit('redirectLogin', conf);
+        });
     });
 
     socket.on('getAttachment', function (params) {
         getMessagesID(params, getMessage);
+    });
+
+    socket.on('writeConf', function (params) {
+        var conf = {
+            client_id: params.client_id,
+            client_secret: params.client_secret,
+            redirect_uri: params.redirect_uri
+        };
+        fs.writeFile(filePath, JSON.stringify(conf), 'utf8', function (err) {
+            if (err) {
+                throw err;
+            }
+            socket.emit('redirectLogin', conf);
+        });
+    });
+
+    socket.on('readConf', function () {
+        fs.readFile(filePath, 'utf8', function (err, data) {
+            if (err) {
+                console.log('Il file non esiste!');
+            }
+            var conf = JSON.parse(data);
+            sockets.emit('sendConf', conf);
+        });
     });
 });
 

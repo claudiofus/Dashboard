@@ -23,23 +23,6 @@
         </div>
 
         <ul class="list-unstyled components">
-            <li>
-                <a href="/dashboard">
-                    <i class="glyphicon glyphicon-home"></i>
-                    Home
-                </a>
-                <a href="/fatture">
-                    <i class="glyphicon glyphicon-euro"></i>
-                    Fatture
-                </a>
-                <a href="/store">
-                    <i class="glyphicon glyphicon-download"></i>
-                    Venduto in store
-                </a>
-                <a href="/commissioni">
-                    <i class="glyphicon glyphicon-scissors"></i>
-                    Commissioni risparmiate
-                </a>
             <li class="active">
                 <a href="/configurazioni">
                     <i class="glyphicon glyphicon-cog"></i>
@@ -63,22 +46,77 @@
         </nav>
 
         <h2>Configurazioni</h2>
-        <p>.....</p>
+        <p>Inserisci il client_id, client_secret e uri_redirect.</p>
 
         <div class="line"></div>
         <div class="row">
-
+            <div class="col-sm-12 col-md-12">
+                <div class="col-sm-12 col-md-12">
+                    <div class="group">
+                        <input type="text" id="client_id" required style="width: 85%;">
+                        <span class="highlight" style="width: 85%;"></span>
+                        <span class="bar" style="width: 85%;"></span>
+                        <label for="client_id">Client id</label>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <div class="group">
+                        <input type="text" id="client_secret" required>
+                        <span class="highlight"></span>
+                        <span class="bar"></span>
+                        <label for="client_secret">Client secret</label>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <div class="group">
+                        <input type="text" id="redirect_uri" required>
+                        <span class="highlight"></span>
+                        <span class="bar"></span>
+                        <label for="redirect_uri">Redirect URI</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 10px;">
+            <div class="col-sm-12 col-md-12">
+                <div class="col-sm-5 col-md-5 col-sm-offset-6 col-md-offset-6">
+                    <div class="form-group pull-right">
+                        <a href="#" onclick="saveConf()" class="btn btn-primary">SALVA</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="/public/javascripts/jquery.js"></script>
 <script src="/public/javascripts/bootstrap.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script type="text/javascript">
+    var socket = io.connect('http://localhost:8000');
+    socket.on('redirectLogin', function () {
+        window.location = '/';
+    });
+
+    socket.on('sendConf', function (conf) {
+        document.getElementsByTagName("input")[0].value = conf.client_id;
+        document.getElementsByTagName("input")[1].value = conf.client_secret;
+        document.getElementsByTagName("input")[2].value = conf.redirect_uri;
+    });
+
+    function saveConf() {
+        socket.emit('writeConf', {
+            client_id: document.getElementsByTagName("input")[0].value,
+            client_secret: document.getElementsByTagName("input")[1].value,
+            redirect_uri: document.getElementsByTagName("input")[2].value
+        });
+    }
+
     $(document).ready(function () {
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
         });
+        socket.emit('readConf');
     });
 </script>
 </body>
