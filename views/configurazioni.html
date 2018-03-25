@@ -23,10 +23,34 @@
         </div>
 
         <ul class="list-unstyled components">
+            <li class="hidden">
+                <a href="/dashboard">
+                    <i class="glyphicon glyphicon-home"></i>
+                    Home
+                </a>
+                <a href="/fatture">
+                    <i class="glyphicon glyphicon-euro"></i>
+                    Fatture
+                </a>
+                <a href="/store">
+                    <i class="glyphicon glyphicon-tags"></i>
+                    Venduto in store
+                </a>
+                <a href="/commissioni">
+                    <i class="glyphicon glyphicon-scissors"></i>
+                    Commissioni risparmiate
+                </a>
+            </li>
             <li class="active">
                 <a href="/configurazioni">
                     <i class="glyphicon glyphicon-cog"></i>
                     Configurazioni
+                </a>
+            </li>
+            <li class="exitBtn">
+                <a href="#" onclick="logout()">
+                    <i class="glyphicon glyphicon-off"></i>
+                    ESCI
                 </a>
             </li>
         </ul>
@@ -92,7 +116,7 @@
 <script src="/public/javascripts/jquery.js"></script>
 <script src="/public/javascripts/bootstrap.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script type="text/javascript">
+<script>
     var socket = io.connect('http://localhost:8000');
     socket.on('redirectLogin', function () {
         window.location = '/';
@@ -102,6 +126,9 @@
         document.getElementsByTagName("input")[0].value = conf.client_id;
         document.getElementsByTagName("input")[1].value = conf.client_secret;
         document.getElementsByTagName("input")[2].value = conf.redirect_uri;
+        if (conf.authenticated) {
+            $('li').removeClass('hidden');
+        }
     });
 
     function saveConf() {
@@ -110,6 +137,10 @@
             client_secret: document.getElementsByTagName("input")[1].value,
             redirect_uri: document.getElementsByTagName("input")[2].value
         });
+    }
+
+    function logout() {
+        socket.emit('logout');
     }
 
     $(document).ready(function () {

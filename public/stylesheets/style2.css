@@ -15,6 +15,14 @@ a, a:hover, a:focus {
     transition: all 0.3s;
 }
 
+.underlined {
+    text-decoration: underline;
+}
+
+.mb20 {
+    margin-bottom: 20px;
+}
+
 @media (min-width: 1024px) {
     .navbar {
         display: none;
@@ -125,49 +133,17 @@ i, span {
     background: #198573;
 }
 
-a[data-toggle="collapse"] {
-    position: relative;
+li.exitBtn {
+    padding: 30%;
 }
 
-a[aria-expanded="false"]::before, a[aria-expanded="true"]::before {
-    content: '\e259';
-    display: block;
-    position: absolute;
-    right: 20px;
-    font-family: 'Glyphicons Halflings';
-    font-size: 0.6em;
-}
-
-a[aria-expanded="true"]::before {
-    content: '\e260';
-}
-
-ul ul a {
-    font-size: 0.9em !important;
-    padding-left: 30px !important;
-    background: #6d7fcc;
-}
-
-ul.CTAs {
-    padding: 20px;
-}
-
-ul.CTAs a {
-    text-align: center;
+li.exitBtn a {
+    text-align: center !important;
     font-size: 0.9em !important;
     display: block;
     border-radius: 5px;
     margin-bottom: 5px;
-}
-
-a.download {
-    background: #fff;
-    color: #16a085;
-}
-
-a.article, a.article:hover {
-    background: #6d7fcc !important;
-    color: #fff !important;
+    background-color: darkslategrey;
 }
 
 /* ---------------------------------------------------
@@ -239,6 +215,17 @@ a.article, a.article:hover {
 
     #sidebarCollapse span {
         display: none;
+    }
+
+    li.exitBtn {
+        padding: 0;
+    }
+
+    li.exitBtn a {
+        text-align: center !important;
+        border-radius: 0;
+        background: #16a085;
+        color: #fff;
     }
 }
 
@@ -569,7 +556,7 @@ input[type="text"]:focus ~ label, input[type="text"]:valid ~ label {
     content: '';
     height: 2px;
     width: 0;
-    bottom: 1px;
+    bottom: 0;
     position: absolute;
     background: #198573;
     transition: 0.2s ease all;

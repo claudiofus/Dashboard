@@ -35,7 +35,7 @@
                     Fatture
                 </a>
                 <a href="/store">
-                    <i class="glyphicon glyphicon-download"></i>
+                    <i class="glyphicon glyphicon-tags"></i>
                     Venduto in store
                 </a>
                 <a href="/commissioni">
@@ -45,6 +45,12 @@
                 <a href="/configurazioni">
                     <i class="glyphicon glyphicon-cog"></i>
                     Configurazioni
+                </a>
+            </li>
+            <li class="exitBtn">
+                <a href="#" onclick="logout()">
+                    <i class="glyphicon glyphicon-off"></i>
+                    ESCI
                 </a>
             </li>
         </ul>
@@ -69,7 +75,7 @@
                 <div class="ourTeam-box text-center">
                     <div class="col-md-12 section1">
                         <a href="/fatture">
-                            <img src="/public/images/euro.png">
+                            <img src="/public/images/euro.png" alt="euro">
                         </a>
                     </div>
                     <div class="section2">
@@ -86,7 +92,7 @@
                 <div class="section-info ourTeam-box text-center">
                     <div class="col-md-12 section1">
                         <a href="/store">
-                            <img src="/public/images/shop.png">
+                            <img src="/public/images/shop.png" alt="shop">
                         </a>
                     </div>
                     <div class="section2">
@@ -104,7 +110,7 @@
                 <div class="section-danger ourTeam-box text-center">
                     <div class="col-md-12 section1">
                         <a href="/commissioni">
-                            <img src="/public/images/percentage.png">
+                            <img src="/public/images/percentage.png" alt="discount">
                         </a>
                     </div>
                     <div class="section2">
@@ -121,14 +127,14 @@
                 <div class="section-yellow ourTeam-box text-center">
                     <div class="col-md-12 section1">
                         <a href="/configurazioni">
-                            <img src="/public/images/settings.png">
+                            <img src="/public/images/settings.png" alt="settings">
                         </a>
                     </div>
                     <div class="section2">
                         <h1>CONFIGURAZIONI</h1><br>
                     </div>
                     <div class="section2">
-                        <p>Lorem ipsum...</p>
+                        <p>Inserisci il client_id, client_secret e uri_redirect.</p>
                     </div>
                 </div>
             </div>
@@ -137,12 +143,22 @@
 </div>
 
 <script src="/public/javascripts/jquery.js"></script>
-<script src="/public/javascripts/bootstrap.js"></script>
-<script type="text/javascript">
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io.connect('http://localhost:8000');
+
     $(document).ready(function () {
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
         });
+    });
+
+    function logout() {
+        socket.emit('logout');
+    }
+
+    socket.on('redirectLogin', function () {
+        window.location = '/';
     });
 </script>
 </body>

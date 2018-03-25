@@ -33,7 +33,7 @@
             </li>
             <li class="active">
                 <a href="/store">
-                    <i class="glyphicon glyphicon-download"></i>
+                    <i class="glyphicon glyphicon-tags"></i>
                     Venduto in store
                 </a>
             </li>
@@ -45,6 +45,12 @@
                 <a href="/configurazioni">
                     <i class="glyphicon glyphicon-cog"></i>
                     Configurazioni
+                </a>
+            </li>
+            <li class="exitBtn">
+                <a href="#" onclick="logout()">
+                    <i class="glyphicon glyphicon-off"></i>
+                    ESCI
                 </a>
             </li>
         </ul>
@@ -64,76 +70,73 @@
         </nav>
 
         <h2>Venduto in store</h2>
-        <p>Scansiona il codice a barre con il tuo lettore e verrà automaticamente decrementato di 1 unità il numero
-            delle offerte disponibili su Amazon.
-            <br/><b><u>Due articoli con lo stesso codice a barre devono essere scansionati due volte!</u></b></p>
-
+        <p>Scansiona il codice a barre con il tuo lettore ed il numero di offerte disponibili su Amazon verrà
+            automaticamente decrementato di 1 unità. </p>
+        <p class="underlined">
+            <strong>Due articoli con lo stesso codice a barre devono essere scansionati due volte!</strong>
+        </p>
 
         <div class="line"></div>
-        <div class="row">
-            <div class="col-sm-12 col-md-12">
-                <div class="col-sm-7 col-md-7 col-sm-offset-5 col-md-offset-5">
-                    <p style="padding-top: 10px;">Lista degli ultimi 15 prodotti venduti: (TODO: recuperare nome
-                        prodotto)</p>
-                </div>
+        <div class="col-sm-12 col-md-12">
+            <div class="col-sm-5 col-md-5">
+                <p class="mb20">Scansiona il codice a barre dell'articolo venduto</p>
+                <form action="#">
+                    <div class="group">
+                        <input type="text" id="UPC" required>
+                        <span class="highlight"></span>
+                        <span class="bar"></span>
+                        <label for="UPC">Codice a barre (UPC)</label>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="reset">RESET</button>
+                        <button class="btn btn-primary" onclick="enqueueReq()">SCARICA</button>
+                    </div>
+                </form>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-12 col-md-12">
-                <div class="col-sm-5 col-md-5">
-                    <form>
-                        <div class="group">
-                            <input type="text" id="UPC" required>
-                            <span class="highlight"></span>
-                            <span class="bar"></span>
-                            <label for="UPC">Codice a barre (UPC)</label>
-                        </div>
-                    </form>
-                </div>
-                <div class="col-sm-7 col-md-7">
-                    <form>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST1" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST2" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST3" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST4" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST5" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST6" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST7" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST8" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST9" readonly>
-                            <span class="bar"></span>
-                        </div>
-                        <div class="groupNoMargin">
-                            <input type="text" value="TEST10" readonly>
-                            <span class="bar"></span>
-                        </div>
-                    </form>
-                </div>
+            <div class="col-sm-7 col-md-7">
+                <p class="mb20">Lista degli ultimi 10 prodotti venduti: (TODO: recuperare nome prodotto)</p>
+                <form>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST1" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST2" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST3" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST4" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST5" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST6" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST7" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST8" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST9" readonly>
+                        <span class="bar"></span>
+                    </div>
+                    <div class="groupNoMargin">
+                        <input type="text" value="TEST10" readonly>
+                        <span class="bar"></span>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -141,12 +144,29 @@
 
 <script src="/public/javascripts/jquery.js"></script>
 <script src="/public/javascripts/bootstrap.js"></script>
-<script type="text/javascript">
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io.connect('http://localhost:8000');
+
     $(document).ready(function () {
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
         });
     });
+
+    socket.on('redirectLogin', function () {
+        window.location = '/';
+    });
+
+    function enqueueReq() {
+        if (document.getElementsByTagName("input")[0].value) {
+            console.log(document.getElementsByTagName("input")[0].value);
+        }
+    }
+
+    function logout() {
+        socket.emit('logout');
+    }
 </script>
 </body>
 </html>

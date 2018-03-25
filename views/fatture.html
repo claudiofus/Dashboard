@@ -38,7 +38,7 @@
             </li>
             <li>
                 <a href="/store">
-                    <i class="glyphicon glyphicon-download"></i>
+                    <i class="glyphicon glyphicon-tags"></i>
                     Venduto in store
                 </a>
                 <a href="/commissioni">
@@ -48,6 +48,12 @@
                 <a href="/configurazioni">
                     <i class="glyphicon glyphicon-cog"></i>
                     Configurazioni
+                </a>
+            </li>
+            <li class="exitBtn">
+                <a href="#" onclick="logout()">
+                    <i class="glyphicon glyphicon-off"></i>
+                    ESCI
                 </a>
             </li>
         </ul>
@@ -68,17 +74,19 @@
         </nav>
 
         <h2>Fatture</h2>
-        <p>Seleziona la data di inizio e fine in cui vuoi ricercare le fatture Amazon ed inserisci l'email a cui
-            inviarle.
-            <br/><u><b>Nel caso in cui siano state cancellate le relative mail, le fatture non verranno recuperate.</b></u>
+        <p>Seleziona la data di inizio e fine in cui vuoi ricercare le fatture Amazon ed il relativo marketplace.</p>
+        <p class="underlined">
+            <strong>
+                Nel caso in cui siano state cancellate le relative mail, le fatture non verranno recuperate.
+            </strong>
         </p>
 
         <div class="line"></div>
 
-        <form role="form" novalidate>
+        <form novalidate>
             <div class="row">
                 <div class="col-sm-12 col-md-12">
-                    <div class="col-sm-6 col-md-6">
+                    <div class="col-sm-5 col-md-5">
                         <div class="group">
                             <input type="text" id="date-start" required>
                             <span class="highlight"></span>
@@ -86,7 +94,7 @@
                             <label for="date-start">Data inizio</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-6">
+                    <div class="col-sm-5 col-md-5">
                         <div class="group">
                             <input type="text" id="date-end" required>
                             <span class="highlight"></span>
@@ -94,17 +102,9 @@
                             <label for="date-end">Data fine</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-6">
+                    <div class="col-sm-12 col-md-12">
                         <div class="group">
-                            <input type="text" id="email" required>
-                            <span class="highlight"></span>
-                            <span class="bar"></span>
-                            <label for="email">Indirizzo email</label>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="group">
-                            <label>Marketplace</label>
+                            <label style="color: #16a085;">Marketplace</label>
                         </div>
                         <ul class="noBullet">
                             <li class="list__item">
@@ -153,9 +153,7 @@
             </div>
         </form>
     </div>
-    </form>
     <a id="downloadPdf"></a>
-</div>
 </div>
 <!--https://github.com/T00rk/bootstrap-material-datetimepicker-->
 <script src="/public/javascripts/jquery.js"></script>
@@ -165,7 +163,7 @@
 <script src="/public/javascripts/datepicker.js"></script>
 <script src="/public/javascripts/sw.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script type="text/javascript">
+<script>
     var socket = io.connect('http://localhost:8000');
 
     $(document).ready(function () {
@@ -184,7 +182,9 @@
             } else if (isChrome) {
                 var link = document.getElementById('downloadPdf');
                 link.download = "Fattura";
+                link.target = '_blank';
                 link.href = downloadURL;
+                document.body.appendChild(link);
                 link.click();
             } else { // Directly use base 64 encoded data for rest browsers (not IE)
                 window.open(downloadURL, '_blank');
@@ -194,7 +194,15 @@
         socket.on('sendError', function (error) {
             alert('Si è verificato un errore: ' + error);
         });
+
+        socket.on('redirectLogin', function () {
+            window.location = '/';
+        });
     });
+
+    function logout() {
+        socket.emit('logout');
+    }
 
     function getAttachment() {
         if ($("input[type=checkbox]:checked").length === 0) {
@@ -205,12 +213,11 @@
         socket.emit('getAttachment', {
             startDate: document.getElementsByTagName("input")[0].value,
             endDate: document.getElementsByTagName("input")[1].value,
-            email: document.getElementsByTagName("input")[2].value,
-            it: document.getElementsByTagName("input")[3].checked,
-            de: document.getElementsByTagName("input")[4].checked,
-            fr: document.getElementsByTagName("input")[5].checked,
-            es: document.getElementsByTagName("input")[6].checked,
-            uk: document.getElementsByTagName("input")[7].checked
+            it: document.getElementsByTagName("input")[2].value,
+            de: document.getElementsByTagName("input")[3].checked,
+            fr: document.getElementsByTagName("input")[4].checked,
+            es: document.getElementsByTagName("input")[5].checked,
+            uk: document.getElementsByTagName("input")[6].checked
         });
     }
 </script>
