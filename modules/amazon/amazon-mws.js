@@ -26,7 +26,8 @@ var exec = require('child_process').exec;
 
 var resources = {
     products: require('./Products'),
-    reports: require('./Reports')
+    reports: require('./Reports'),
+    feeds: require('./Feeds')
 };
 
 AmazonMws.AmazonMwsResource = require('./AmazonMwsResource');

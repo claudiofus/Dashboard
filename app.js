@@ -4,110 +4,133 @@ var fs = require('fs');
 var app = express();
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
-var {google} = require('googleapis');
-var OAuth2 = google.auth.OAuth2;
-
-var filePath = __dirname + '/config.json';
-var scopes = ['https://www.googleapis.com/auth/gmail.readonly'];
+var filePath = __dirname + '/modules/config.json';
 
 // Read file for configurations
 var fileConf = fs.readFileSync(filePath, 'utf8');
 var conf = JSON.parse(fileConf);
 conf.authenticated = false;
-var oauth2Client = new OAuth2(conf.client_id, conf.client_secret, conf.redirect_uri);
-var url = oauth2Client.generateAuthUrl({access_type: 'offline', scope: scopes});
 
 server.listen(8000);
 
 app.use(express.static(__dirname + '/'));
-var dispatcher = require('./modules/dispatcher')(app, google, oauth2Client, conf);
-var gmailApi = require('./modules/gmail')(google.gmail('v1'), io);
+var dispatcher = require('./modules/dispatcher')(app, conf);
+var gmailApi = require('./modules/gmail')(io);
+var socket = require('./modules/socket')(io, conf);
 
 var accessKey = '';
 var accessSecret = '';
 
 var amazonMws = require('./modules/amazon/amazon-mws')(accessKey, accessSecret);
 
-// var productRequest = function () {
-//     amazonMws.products.search({
-//         'Version': '2011-10-01',
-//         'Action': 'GetMatchingProduct',
-//         'SellerId': '',
-//         'MWSAuthToken': '',
-//         'MarketplaceId': '',
-//         'ASINList.ASIN.1': ''
-//     }, function (error, response) {
-//         if (error) {
-//             console.log('error products', error);
-//             return;
-//         }
-//         console.log('response', response);
-//     });
-// };
-//
-// productRequest();
+//ORDINE DEI SERVIZI
+// ListMatchingProducts
+// RequestReport
+// GetReportList
+// GetReport
+// SubmitFeed
 
-// var reportRequest = function () {
-//
-//     amazonMws.reports.search({
-//         'Version': '2009-01-01',
-//         'Action': 'GetReportList',
-//         'SellerId': '',
-//         'MWSAuthToken': ''
-//     }, function (error, response) {
-//         if (error) {
-//             console.log('error ', error);
-//             return;
-//         }
-//         console.log('response', response);
-//     });
-// };
-//
-// reportRequest();
-
-io.on('connection', function (socket) {
-    socket.on('signIn', function () {
-        if (conf) {
-            var arr = {};
-            arr.redirect_uri = url;
-            socket.emit('redirectLogin', arr);
+var productRequest = function () {
+    amazonMws.products.search({
+        'Version': '2011-10-01',
+        'Action': 'ListMatchingProducts',
+        'SellerId': '',
+        'MWSAuthToken': '',
+        'MarketplaceId': '',
+        'Query': ''
+    }, function (error, response) {
+        if (error) {
+            console.log('error products', error);
+            return;
         }
-    });
-
-    socket.on('getAttachment', function (params) {
-        gmailApi.getMessagesID(params, gmailApi.getMessage);
-    });
-
-    socket.on('writeConf', function (params) {
-        conf = {
-            client_id: params.client_id,
-            client_secret: params.client_secret,
-            redirect_uri: params.redirect_uri,
-            authenticated: params.authenticated
-        };
-        oauth2Client = new OAuth2(conf.client_id, conf.client_secret, conf.redirect_uri);
-        url = oauth2Client.generateAuthUrl({access_type: 'offline', scope: scopes});
-        fs.writeFile(filePath, JSON.stringify(conf), 'utf8', function () {
-            socket.emit('redirectLogin', conf);
+        //console.log('response ', JSON.stringify(response));
+        console.log('response', response);
+        var ASIN = response.Products.Product.Identifiers.MarketplaceASIN.ASIN;
+        reportRequest();
+        getReportIDRequest(ASIN, function (reportID, ASIN) {
+            getReport(reportID, ASIN, function (ASIN) {
+                removeItemFromStore(ASIN);
+            });
         });
     });
+};
 
-    socket.on('readConf', function () {
-        if (conf.client_id && conf.client_secret && conf.redirect_uri) {
-            if (conf.tokens) {
-                conf.authenticated = true;
-            }
-            socket.emit('sendConf', conf);
+var reportRequest = function () {
+
+    amazonMws.reports.search({
+        'Version': '2009-01-01',
+        'Action': 'RequestReport',
+        'SellerId': '',
+        'ReportType': '_GET_MERCHANT_LISTINGS_DATA_LITE_'
+    }, function (error, response) {
+        if (error) {
+            console.log('error ', error);
+            return;
         }
+        console.log('response', response);
     });
+};
 
-    socket.on('logout', function () {
-        conf.authenticated = false;
-        conf.tokens = undefined;
-        fs.writeFile(filePath, JSON.stringify(conf), 'utf8', function () {
-            socket.emit('redirectLogin');
-        });
+var getReportIDRequest = function (ASIN, callback) {
+
+    amazonMws.reports.search({
+        'Version': '2009-01-01',
+        'Action': 'GetReportList',
+        'SellerId': ''
+    }, function (error, response) {
+        if (error) {
+            console.log('error ', error);
+            return;
+        }
+        console.log('response', response);
+        //TODO effettuare i controlli di validità (data e tipo)
+        callback(response.ReportInfo["0"].ReportId, ASIN);
     });
-});
+};
+
+var getReport = function (reportID, ASIN, callback) {
+
+    amazonMws.reports.search({
+        'Version': '2009-01-01',
+        'Action': 'GetReport',
+        'SellerId': '',
+        'ReportId': reportID
+    }, function (error, response) {
+        if (error) {
+            console.log('error ', error);
+            return;
+        }
+        console.log('response', response);
+        callback(ASIN);
+    });
+};
+
+var removeItemFromStore = function (ASIN) {
+    var FeedContent = '';
+    // <Message>
+    //     <MessageID>1</MessageID>
+    //     <OperationType>Update</OperationType>
+    //     <Inventory>
+    //         <SKU></SKU>
+    //         <Quantity>4</Quantity>
+    //     </Inventory>
+    // </Message>
+
+    amazonMws.feeds.submit({
+        'Version': '2009-01-01',
+        'Action': 'SubmitFeed',
+        'SellerId': '',
+        'FeedType': '_POST_PRODUCT_DATA_',
+        'FeedContent': FeedContent
+    }, function (error, response) {
+        if (error) {
+            console.log('error ', error);
+            return;
+        }
+        console.log('response', response);
+    });
+};
+
+productRequest();
 
 module.exports = app;

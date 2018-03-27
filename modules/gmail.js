@@ -1,4 +1,6 @@
-module.exports = function (gmail, io) {
+module.exports = function (io) {
+    var {google} = require('googleapis');
+    var gmail = google.gmail('v1');
     var module = {};
 
     module.getMessagesID = function (params, callback) {

@@ -74,6 +74,12 @@
 
         <div class="line"></div>
         <div class="row">
+            <div class="text-center">
+                <h4>
+                    <img src="../public/images/gmail.png" alt="gmail_icon" style="width: 5%;">
+                    Credenziali Gmail
+                </h4>
+            </div>
             <div class="col-sm-12 col-md-12">
                 <div class="col-sm-12 col-md-12">
                     <div class="group">
@@ -101,6 +107,77 @@
                 </div>
             </div>
         </div>
+        <div class="line"></div>
+        <div class="row">
+            <h4 class="text-center">
+                <img src="../public/images/amazon.png" alt="amazon_icon" style="width: 5%;">
+                Credenziali Amazon
+            </h4>
+            <div class="col-sm-12 col-md-12">
+                <div class="group">
+                    <input type="text" id="AWSaccess_key" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="AWSaccess_key">Chiave di accesso AWS</label>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="group">
+                    <input type="text" id="AWSsecret_key" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="AWSsecret_key">Chiave segreta AWS</label>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="group">
+                    <input type="text" id="AWSseller_id" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="AWSseller_id">ID venditore</label>
+                </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+                <div class="group">
+                    <input type="text" id="IT_Mrkt" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="IT_Mrkt">Marketplace Italia</label>
+                </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+                <div class="group">
+                    <input type="text" id="UK_Mrkt" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="UK_Mrkt">Marketplace Inghilterra</label>
+                </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+                <div class="group">
+                    <input type="text" id="DE_Mrkt" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="DE_Mrkt">Marketplace Germania</label>
+                </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+                <div class="group">
+                    <input type="text" id="FR_Mrkt" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="FR_Mrkt">Marketplace Francia</label>
+                </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+                <div class="group">
+                    <input type="text" id="ES_Mrkt" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="ES_Mrkt">Marketplace Spagna</label>
+                </div>
+            </div>
+        </div>
         <div class="row" style="margin-top: 10px;">
             <div class="col-sm-12 col-md-12">
                 <div class="col-sm-5 col-md-5 col-sm-offset-6 col-md-offset-6">
@@ -123,20 +200,22 @@
     });
 
     socket.on('sendConf', function (conf) {
-        document.getElementsByTagName("input")[0].value = conf.client_id;
-        document.getElementsByTagName("input")[1].value = conf.client_secret;
-        document.getElementsByTagName("input")[2].value = conf.redirect_uri;
+        for (var key in conf) {
+            if (key !== 'authenticated') {
+                document.getElementsByTagName("input")[key].value = conf[key];
+            }
+        }
         if (conf.authenticated) {
             $('li').removeClass('hidden');
         }
     });
 
     function saveConf() {
-        socket.emit('writeConf', {
-            client_id: document.getElementsByTagName("input")[0].value,
-            client_secret: document.getElementsByTagName("input")[1].value,
-            redirect_uri: document.getElementsByTagName("input")[2].value
-        });
+        var params = {};
+        for (var i = 0; i < document.getElementsByTagName("input").length; i++) {
+            params[document.getElementsByTagName("input")[i].id] = document.getElementsByTagName("input")[i].value;
+        }
+        socket.emit('writeConf', params);
     }
 
     function logout() {
