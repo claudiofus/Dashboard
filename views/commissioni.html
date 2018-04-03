@@ -8,39 +8,7 @@
     <link href="/public/images/img.png" rel="shortcut icon">
     <link href="/public/stylesheets/bootstrap.css" rel="stylesheet">
     <link href="/public/stylesheets/style2.css" rel="stylesheet">
-
     <title>Commissioni</title>
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
-    <script>
-        google.charts.load('current', {'packages': ['line']});
-        google.charts.setOnLoadCallback(drawChart);
-
-        function daysInMonth(month, year) {
-            return new Date(year, month + 1, 0).getDate();
-        }
-
-        function drawChart() {
-
-            var data = new google.visualization.DataTable();
-            data.addColumn('date', 'Giorno');
-            data.addColumn('number', 'Commissioni risparmiate');
-
-            var currMonth = new Date().getMonth();
-            var currYear = new Date().getFullYear();
-            var currDays = daysInMonth(currMonth, currYear);
-            var arr = [];
-            for (var i = 1; i <= currDays; i++) {
-                var item = new Array(2);
-                item[0] = new Date(currYear, currMonth, i);
-                item[1] = Math.random() * 100;
-                arr.push(item);
-            }
-            data.addRows(arr);
-
-            var chart = new google.charts.Line(document.getElementById('linechart_material'));
-            chart.draw(data);
-        }
-    </script>
 </head>
 
 <body>
@@ -108,28 +76,103 @@
         <div class="line"></div>
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12">
-                <div class="row">
-                    <div id="linechart_material" class="chart"></div>
+                <div class="row mb20">
+                    <div class="form-group">
+                        <label for="months" class="col-md-3 col-sm-3 col-xs-5 control-label">Mese selezionato</label>
+                        <div class="col-md-3 col-sm-3 col-xs-7">
+                            <select class="form-control" id="months" onchange="drawChart(this.value)">
+                                <option value="0">Gennaio</option>
+                                <option value="1">Febbraio</option>
+                                <option value="2">Marzo</option>
+                                <option value="3">Aprile</option>
+                                <option value="4">Maggio</option>
+                                <option value="5">Giugno</option>
+                                <option value="6">Luglio</option>
+                                <option value="7">Agosto</option>
+                                <option value="8">Settembre</option>
+                                <option value="9">Ottobre</option>
+                                <option value="10">Novembre</option>
+                                <option value="11">Dicembre</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12 col-sm-12 col-xs-12">
-                <p id="totValue">Commissioni totali risparmiate: </p>
-                <p id="average">Media giornaliera: </p>
+                <div class="row">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
+                        <div class="col-md-3 col-sm-6 col-xs-12 mb20">
+                            <div class="text-white bg-flat-color-1">
+                                <div class="card-body">
+                                    <h4><b id="totValue"></b></h4>
+                                    <p class="text-white">Commissioni totali</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12 mb20">
+                            <div class="text-white bg-flat-color-2">
+                                <div class="card-body">
+                                    <h4><b id="amazPerc"></b></h4>
+                                    <p class="text-white">Commissioni Amazon</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12 mb20">
+                            <div class="text-white bg-flat-color-3">
+                                <div class="card-body">
+                                    <h4><b id="shipPerc"></b></h4>
+                                    <p class="text-white">Costi spedizione</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12 mb20">
+                            <div class="text-white bg-flat-color-4">
+                                <div class="card-body">
+                                    <h4><b id="average"></b></h4>
+                                    <p class="text-white">Media giornaliera</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <canvas id="myChart" style="width: 100% !important;"></canvas>
+                </div>
             </div>
         </div>
     </div>
 </div>
 <script src="/public/javascripts/jquery.js"></script>
 <script src="/public/javascripts/bootstrap.js"></script>
+<script src="/public/javascripts/momentjs.js"></script>
+<script src="/public/javascripts/charts.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
+    moment.locale('it');
     var socket = io.connect('http://localhost:8000');
+    var lineChart;
+    var currMonth = new Date().getMonth();
+
+    var amazPerc, shipPerc, storeProducts;
 
     $(document).ready(function () {
-        $('#sidebarCollapse').on('click', function () {
-            $('#sidebar').toggleClass('active');
+        socket.emit('getInfo', function (items) {
+            storeProducts = items;
+            socket.emit('readConf', function (conf) {
+                for (var key in conf) {
+                    if (key === 'amazPerc' && conf.hasOwnProperty(key)) {
+                        amazPerc = parseInt(conf[key]);
+                    }
+                    if (key === 'shipPerc' && conf.hasOwnProperty(key)) {
+                        shipPerc = parseInt(conf[key]);
+                    }
+                }
+                drawChart(currMonth);
+            });
+
+            $('#months').find('option:eq(' + currMonth + ')').prop('selected', true);
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+
+            });
         });
     });
 
@@ -140,6 +183,79 @@
     socket.on('redirectLogin', function () {
         window.location = '/';
     });
+
+    function drawChart(currMonth) {
+        var total = 0, totalAmaz = 0, totalShip = 0, currDays = 0;
+        var values = [];
+        var meta = lineChart && lineChart.data && lineChart.data.datasets[0]._meta;
+        for (var i in meta) {
+            if (meta.hasOwnProperty(i) && meta[i].controller) meta[i].controller.chart.destroy();
+        }
+
+        for (var idx = 0; idx < storeProducts.length; idx++) {
+            var selMonth = parseInt(storeProducts[idx].CreatedAt.substring(5, 7)) - 1;
+            if (selMonth === parseInt(currMonth)) {
+                var aPerc = storeProducts[idx].Price * (amazPerc / 100);
+                var perc = aPerc + shipPerc;
+                values.push({x: new Date(storeProducts[idx].CreatedAt), y: perc});
+                total += perc;
+                totalAmaz += aPerc;
+                totalShip += shipPerc;
+                currDays++;
+            }
+        }
+
+        document.getElementById('totValue').innerText = total.toFixed(2) + ' €';
+        document.getElementById('average').innerText = (total / currDays).toFixed(2) + ' €';
+        document.getElementById('amazPerc').innerText = totalAmaz.toFixed(2) + ' €';
+        document.getElementById('shipPerc').innerText = totalShip.toFixed(2) + ' €';
+
+        var config = {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Euro',
+                    data: values,
+                    fill: false,
+                    // borderColor: 'rgba(75, 192, 192, 0.9)'
+                    borderColor: 'rgba(22, 160, 133, 0.7)'
+                }]
+            },
+            options: {
+                animation: {duration: 2000},
+                legend: {display: false},
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Riepilogo commissioni risparmiate'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function (t) {
+                            return t.yLabel.toFixed(2) + ' €';
+                        }
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        gridLines: {display: false},
+                        type: 'time',
+                        time: {
+
+                            tooltipFormat: 'D MMM YYYY',
+                            unit: 'day'
+                        }
+                    }]
+                }
+            }
+        };
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        lineChart = new Chart(ctx, config);
+        window.myLine = lineChart;
+    }
 </script>
 </body>
 </html>

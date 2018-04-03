@@ -103,9 +103,7 @@
                         </div>
                     </div>
                     <div class="col-sm-8 col-md-8">
-                        <div class="group">
-                            <label style="color: #16a085;">Marketplace</label>
-                        </div>
+                        <label class="groupNoMargin mb20">Marketplace</label>
                         <ul class="noBullet">
                             <li class="list__item">
                                 <label class="label--checkbox">
@@ -144,7 +142,7 @@
             <div class="row" style="margin-top: 10px;">
                 <div class="col-sm-12 col-md-12">
                     <div class="col-sm-5 col-md-5 col-sm-offset-6 col-md-offset-6">
-                        <div class="form-group pull-right">
+                        <div class="form-group">
                             <button class="btn btn-primary" type="reset">RESET</button>
                             <button class="btn btn-primary" onclick="getAttachment()">SCARICA</button>
                         </div>
@@ -213,7 +211,7 @@
         socket.emit('getAttachment', {
             startDate: document.getElementsByTagName("input")[0].value,
             endDate: document.getElementsByTagName("input")[1].value,
-            it: document.getElementsByTagName("input")[2].value,
+            it: document.getElementsByTagName("input")[2].checked,
             de: document.getElementsByTagName("input")[3].checked,
             fr: document.getElementsByTagName("input")[4].checked,
             es: document.getElementsByTagName("input")[5].checked,

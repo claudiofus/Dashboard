@@ -1,3 +1,9 @@
+.bg-flat-color-1 {background: #20a8d8}
+.bg-flat-color-2 {background: #4dbd74}
+.bg-flat-color-3 {background: #ffc107}
+.bg-flat-color-4 {background: #f86c6b}
+.bg-flat-color-5 {background: #63c2de}
+
 body {
     background: #fff;
 }
@@ -134,7 +140,7 @@ i, span {
 }
 
 li.exitBtn {
-    padding: 30%;
+    padding: 20%;
 }
 
 li.exitBtn a {
@@ -510,6 +516,7 @@ li.exitBtn a {
 
 .groupNoMargin {
     position: relative;
+    color: #198573;
 }
 
 input[type="text"] {
@@ -627,7 +634,7 @@ input[type="text"]:focus ~ .highlight {
 }
 
 .ourTeam-box {
-    border-top: 6px solid #5dddd3;
+    border-top: 6px solid #20a8d8;
     background-color: #fff;
 }
 
@@ -636,7 +643,7 @@ input[type="text"]:focus ~ .highlight {
 }
 
 .section1 img {
-    border: 5px solid #5dddd3;
+    border: 5px solid #20a8d8;
     padding: 5px;
     border-radius: 50%;
     height: 170px;
@@ -647,7 +654,7 @@ input[type="text"]:focus ~ .highlight {
     font-size: 20px;
     color: #777;
     margin: 0;
-    border-bottom: 2px solid #5dddd3;
+    border-bottom: 2px solid #20a8d8;
     display: inline-block;
     padding: 10px 0;
 }
@@ -659,47 +666,42 @@ input[type="text"]:focus ~ .highlight {
 }
 
 .section-info {
-    border-top: 6px solid #90dfaa;
+    border-top: 6px solid #4dbd74;
 }
 
 .section-danger {
-    border-top: 6px solid #fd8469;
+    border-top: 6px solid #ffc107;
 }
 
 .section-yellow {
-    border-top: 6px solid #deb887;
+    border-top: 6px solid #f86c6b;
 }
 
 .section-info .section1 img {
-    border: 5px solid #90dfaa;
+    border: 5px solid #4dbd74;
     padding: 5px;
 }
 
 .section-danger .section1 img {
-    border: 5px solid #fd8469;
+    border: 5px solid #ffc107;
     padding: 5px;
 }
 
 .section-yellow .section1 img {
-    border: 5px solid #deb887;
+    border: 5px solid #f86c6b;
     padding: 5px;
 }
 
 .section-info .section2 h1 {
-    border-bottom: 2px solid #90dfaa;
+    border-bottom: 2px solid #4dbd74;
 }
 
 .section-danger .section2 h1 {
-    border-bottom: 2px solid #fd8469;
+    border-bottom: 2px solid #ffc107;
 }
 
 .section-yellow .section2 h1 {
-    border-bottom: 2px solid #deb887;
-}
-
-.chart {
-    width: 100%;
-    min-height: 300px;
+    border-bottom: 2px solid #f86c6b;
 }
 
 .list__item {
@@ -799,4 +801,12 @@ input[type="text"]:focus ~ .highlight {
 
 .noBullet input[type=checkbox] {
     margin: 4px 15px;
+}
+
+.card-body {
+    padding: 15px;
+}
+
+.text-white {
+    color: #fff;
 }

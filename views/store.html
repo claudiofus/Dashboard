@@ -79,10 +79,11 @@
         <div class="line"></div>
         <div class="col-sm-12 col-md-12">
             <div class="col-sm-5 col-md-5">
-                <p class="mb20">Scansiona il codice a barre dell'articolo venduto</p>
+                <label class="groupNoMargin" style="margin-bottom: 30px;">Scansiona il codice a barre</label>
                 <form action="#">
                     <div class="group">
-                        <input type="text" id="UPC" required>
+                        <input type="text" id="UPC" required
+                               oninvalid="this.setCustomValidity('Scansiona l\'articolo con il lettore di codici a barre.')">
                         <span class="highlight"></span>
                         <span class="bar"></span>
                         <label for="UPC">Codice a barre (UPC)</label>
@@ -93,50 +94,22 @@
                     </div>
                 </form>
             </div>
-            <div class="col-sm-7 col-md-7">
-                <p class="mb20">Lista degli ultimi 10 prodotti venduti: (TODO: recuperare nome prodotto)</p>
-                <form>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST1" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST2" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST3" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST4" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST5" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST6" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST7" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST8" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST9" readonly>
-                        <span class="bar"></span>
-                    </div>
-                    <div class="groupNoMargin">
-                        <input type="text" value="TEST10" readonly>
-                        <span class="bar"></span>
-                    </div>
-                </form>
+            <div class="col-sm-7 col-md-7 table-responsive">
+                <label class="groupNoMargin" style="margin-bottom: 30px;">Lista degli ultimi articolo venduti in
+                    store</label>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>UPC</th>
+                        <th>Descrizione</th>
+                        <th>Ora vendita</th>
+                        <th>Prezzo</th>
+                        <th>Quantità</th>
+                    </tr>
+                    </thead>
+                    <tbody id="items">
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -149,6 +122,20 @@
     var socket = io.connect('http://localhost:8000');
 
     $(document).ready(function () {
+        socket.emit('getInfo', function (items) {
+            var filling = "";
+            for (var i = 0; i < items.length; i++) {
+                filling += '<tr>\n' +
+                    '<td>' + items[i].UPC + '</td>\n' +
+                    '<td>' + items[i].Description + '</td>\n' +
+                    '<td>' + items[i].CreatedAt + '</td>\n' +
+                    '<td>' + items[i].Price + '</td>\n' +
+                    '<td>' + items[i].Quantity + '</td>\n' +
+                    '</tr>';
+            }
+            document.getElementById("items").innerHTML = filling;
+            console.log(items);
+        });
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
         });
@@ -159,8 +146,8 @@
     });
 
     function enqueueReq() {
-        if (document.getElementsByTagName("input")[0].value) {
-            console.log(document.getElementsByTagName("input")[0].value);
+        if (document.getElementsByTagName("input")[0]) {
+            socket.emit('updateQuantity', document.getElementsByTagName("input")[0].value);
         }
     }
 

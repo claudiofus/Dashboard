@@ -70,15 +70,38 @@
         </nav>
 
         <h2>Configurazioni</h2>
-        <p>Inserisci il client_id, client_secret e uri_redirect.</p>
+        <p>Inserisci i parametri di configurazione per le commissioni, Gmail e Amazon.</p>
 
         <div class="line"></div>
         <div class="row">
-            <div class="text-center">
-                <h4>
+            <h3 class="text-center mb20">
+                <img src="../public/images/percentage.png" alt="amazon_icon" style="width: 5%;">
+                Percentuali e costi
+            </h3>
+            <div class="col-sm-6 col-md-6">
+                <div class="group">
+                    <input type="text" id="amazPerc" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="amazPerc">Commissioni Amazon (in %)</label>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="group">
+                    <input type="text" id="shipPerc" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="shipPerc">Costo medio di spedizione (in €)</label>
+                </div>
+            </div>
+        </div>
+        <div class="line"></div>
+        <div class="row">
+            <div>
+                <h3 class="text-center mb20">
                     <img src="../public/images/gmail.png" alt="gmail_icon" style="width: 5%;">
                     Credenziali Gmail
-                </h4>
+                </h3>
             </div>
             <div class="col-sm-12 col-md-12">
                 <div class="col-sm-12 col-md-12">
@@ -109,10 +132,10 @@
         </div>
         <div class="line"></div>
         <div class="row">
-            <h4 class="text-center">
+            <h3  class="text-center mb20">
                 <img src="../public/images/amazon.png" alt="amazon_icon" style="width: 5%;">
                 Credenziali Amazon
-            </h4>
+            </h3>
             <div class="col-sm-12 col-md-12">
                 <div class="group">
                     <input type="text" id="AWSaccess_key" required>
@@ -199,17 +222,6 @@
         window.location = '/';
     });
 
-    socket.on('sendConf', function (conf) {
-        for (var key in conf) {
-            if (key !== 'authenticated') {
-                document.getElementsByTagName("input")[key].value = conf[key];
-            }
-        }
-        if (conf.authenticated) {
-            $('li').removeClass('hidden');
-        }
-    });
-
     function saveConf() {
         var params = {};
         for (var i = 0; i < document.getElementsByTagName("input").length; i++) {
@@ -226,7 +238,17 @@
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
         });
-        socket.emit('readConf');
+        socket.emit('readConf', function (conf) {
+            if (conf.authenticated) {
+                $('li').removeClass('hidden');
+            }
+
+            for (var key in conf) {
+                if (document.getElementsByTagName("input")[key] && conf.hasOwnProperty(key)) {
+                    document.getElementsByTagName("input")[key].value = conf[key];
+                }
+            }
+        });
     });
 </script>
 </body>

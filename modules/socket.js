@@ -1,7 +1,9 @@
 module.exports = function (io, conf) {
+    const db = require('../database/StoreProducts');
     var fs = require('fs');
     var {google} = require('googleapis');
     var gmailApi = require('./gmail')(io);
+    var mwsServices = require('../modules/amazonServices');
     var OAuth2 = google.auth.OAuth2;
     var oauth2Client = new OAuth2(conf.client_id, conf.client_secret, conf.redirect_uri);
     var scopes = ['https://www.googleapis.com/auth/gmail.readonly'];
@@ -23,7 +25,9 @@ module.exports = function (io, conf) {
 
         socket.on('writeConf', function (params) {
             for (var key in params) {
-                conf[key] = params[key];
+                if (params.hasOwnProperty(key)) {
+                    conf[key] = params[key];
+                }
             }
 
             conf.authenticated = params.authenticated;
@@ -34,12 +38,13 @@ module.exports = function (io, conf) {
             });
         });
 
-        socket.on('readConf', function () {
+        socket.on('readConf', function (callback) {
             if (conf.client_id && conf.client_secret && conf.redirect_uri) {
                 if (conf.tokens) {
                     conf.authenticated = true;
                 }
-                socket.emit('sendConf', conf);
+                callback(conf);
+
             }
         });
 
@@ -50,5 +55,29 @@ module.exports = function (io, conf) {
                 socket.emit('redirectLogin');
             });
         });
+
+        socket.on('updateQuantity', function (UPC) {
+            mwsServices.productRequest(UPC);
+        });
+
+        socket.on('getInfo', function (callback) {
+            var params = {
+                TableName: "StoreProducts",
+                limit: 15
+            };
+            db.scan(params, function (items) {
+                items.sort(orderDesc);
+                callback(items);
+            });
+
+        });
     });
 };
+
+function orderDesc(a, b) {
+    if (a.CreatedAt < b.CreatedAt)
+        return 1;
+    if (a.CreatedAt > b.CreatedAt)
+        return -1;
+    return 0;
+}
