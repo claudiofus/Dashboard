@@ -132,32 +132,32 @@
         </div>
         <div class="line"></div>
         <div class="row">
-            <h3  class="text-center mb20">
+            <h3 class="text-center mb20">
                 <img src="../public/images/amazon.png" alt="amazon_icon" style="width: 5%;">
                 Credenziali Amazon
             </h3>
+            <div class="col-sm-6 col-md-6">
+                <div class="group">
+                    <input type="text" id="MWSseller_id" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="MWSseller_id">ID venditore</label>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="group">
+                    <input type="text" id="MWSaccess_key" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="MWSaccess_key">Chiave di accesso MWS</label>
+                </div>
+            </div>
             <div class="col-sm-12 col-md-12">
                 <div class="group">
-                    <input type="text" id="AWSaccess_key" required>
+                    <input type="text" id="MWSsecret_key" required>
                     <span class="highlight"></span>
                     <span class="bar"></span>
-                    <label for="AWSaccess_key">Chiave di accesso AWS</label>
-                </div>
-            </div>
-            <div class="col-sm-6 col-md-6">
-                <div class="group">
-                    <input type="text" id="AWSsecret_key" required>
-                    <span class="highlight"></span>
-                    <span class="bar"></span>
-                    <label for="AWSsecret_key">Chiave segreta AWS</label>
-                </div>
-            </div>
-            <div class="col-sm-6 col-md-6">
-                <div class="group">
-                    <input type="text" id="AWSseller_id" required>
-                    <span class="highlight"></span>
-                    <span class="bar"></span>
-                    <label for="AWSseller_id">ID venditore</label>
+                    <label for="MWSsecret_key">Chiave segreta MWS</label>
                 </div>
             </div>
             <div class="col-sm-4 col-md-4">
@@ -198,6 +198,22 @@
                     <span class="highlight"></span>
                     <span class="bar"></span>
                     <label for="ES_Mrkt">Marketplace Spagna</label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-12">
+                <div class="group">
+                    <input type="text" id="AWSaccess_key" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="AWSaccess_key">Chiave di accesso AWS</label>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-12">
+                <div class="group">
+                    <input type="text" id="AWSsecretKey" required>
+                    <span class="highlight"></span>
+                    <span class="bar"></span>
+                    <label for="AWSsecretKey">Chiave segreta AWS</label>
                 </div>
             </div>
         </div>

@@ -82,7 +82,7 @@
                 <label class="groupNoMargin" style="margin-bottom: 30px;">Scansiona il codice a barre</label>
                 <form action="#">
                     <div class="group">
-                        <input type="text" id="UPC" required
+                        <input type="text" id="UPC" required autocomplete="off"
                                oninvalid="this.setCustomValidity('Scansiona l\'articolo con il lettore di codici a barre.')">
                         <span class="highlight"></span>
                         <span class="bar"></span>
@@ -117,8 +117,10 @@
 
 <script src="/public/javascripts/jquery.js"></script>
 <script src="/public/javascripts/bootstrap.js"></script>
+<script src="/public/javascripts/momentjs.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
+    moment.locale('it');
     var socket = io.connect('http://localhost:8000');
 
     $(document).ready(function () {
@@ -128,13 +130,12 @@
                 filling += '<tr>\n' +
                     '<td>' + items[i].UPC + '</td>\n' +
                     '<td>' + items[i].Description + '</td>\n' +
-                    '<td>' + items[i].CreatedAt + '</td>\n' +
-                    '<td>' + items[i].Price + '</td>\n' +
+                    '<td>' + moment(items[i].CreatedAt).format('lll') + '</td>\n' +
+                    '<td>' + items[i].Price + ' €'+ '</td>\n' +
                     '<td>' + items[i].Quantity + '</td>\n' +
                     '</tr>';
             }
             document.getElementById("items").innerHTML = filling;
-            console.log(items);
         });
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');

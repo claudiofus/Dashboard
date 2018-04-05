@@ -1,39 +1,44 @@
-var accessKey = '';
-var accessSecret = '';
-
+'use strict';
 var _ = require('lodash');
-var amazonMws = require('../modules/amazon/amazon-mws')(accessKey, accessSecret);
+const conf = require('./config');
+var amazonMws = require('../modules/amazon/amazon-mws')(conf.MWSaccess_key, conf.MWSsecret_key);
 
 // REFRESH RATE
 // ListMatchingProducts    ogni 5 secondi
 // RequestReport           ogni minuto
-// GetReportRequestList    ogni minuto
+// GetReportList           ogni minuto
 // GetReport               ogni minuto
 // SubmitFeed              ogni 2 minuti
-// GetFeedSubmissionList   ogni 45 secondi
-
+// GetFeedSubmissionResult ogni minuto
 
 module.exports = {
-    productRequest: function (query) {
+    productRequest: function (query, callback) {
         amazonMws.products.search({
             'Version': '2011-10-01',
             'Action': 'ListMatchingProducts',
-            'SellerId': '',
-            'MarketplaceId': '',
+            'SellerId': conf.MWSseller_id,
+            'MarketplaceId': conf.IT_Mrkt,
             'Query': query
         }, function (error, response) {
             if (error) {
                 console.log('error products', error);
-                return;
+                callback('KO');
             }
             var ASIN = response.Products.Product.Identifiers.MarketplaceASIN.ASIN;
-            module.exports.reportRequest(ASIN, function (reportID, ASIN) {
-                module.exports.getReportIDRequest(reportID, ASIN, function (reportID, ASIN) {
-                    module.exports.getReport(reportID, ASIN, function (SKU, quantity) {
-                        module.exports.removeItemFromStore(SKU, quantity);
+            var description = response.Products.Product.AttributeSets.ItemAttributes.Title;
+            setTimeout(function () {
+                module.exports.reportRequest(ASIN, function (reportID, ASIN) {
+                    module.exports.getReportIDRequest(reportID, ASIN, function (reportID, ASIN) {
+                        module.exports.getReport(reportID, ASIN, function (SKU, quantity) {
+                            module.exports.removeItemFromStore(SKU, quantity, function (feedID) {
+                                module.exports.checkRemoveItem(feedID, function (esito) {
+                                    callback(esito);
+                                });
+                            });
+                        });
                     });
                 });
-            });
+            }, 60000);
         });
     },
 
@@ -41,18 +46,17 @@ module.exports = {
         amazonMws.reports.search({
             'Version': '2009-01-01',
             'Action': 'RequestReport',
-            'SellerId': '',
+            'SellerId': conf.MWSseller_id,
             'ReportType': '_GET_MERCHANT_LISTINGS_DATA_LITE_'
         }, function (error, response) {
             if (error) {
                 console.log('error ', error);
                 return;
             }
-            // console.log('response', response);
             var reportID = response.ReportRequestInfo.ReportRequestId;
             setTimeout(function () {
                 callback(reportID, ASIN);
-            }, 10000);
+            }, 60000);
         });
     },
 
@@ -60,7 +64,7 @@ module.exports = {
         amazonMws.reports.search({
             'Version': '2009-01-01',
             'Action': 'GetReportList',
-            'SellerId': '',
+            'SellerId': conf.MWSseller_id,
             'ReportTypeList.Type.1': '_GET_MERCHANT_LISTINGS_DATA_LITE_',
             'ReportRequestIdList.Id.1': reportID
         }, function (error, response) {
@@ -68,9 +72,9 @@ module.exports = {
                 console.log('error ', error);
                 return;
             }
-            // console.log('response', response);
-            //TODO effettuare i controlli di validità (data)
-            callback(response.ReportInfo.ReportId, ASIN);
+            setTimeout(function () {
+                callback(response.ReportInfo.ReportId, ASIN);
+            }, 60000);
         });
     },
 
@@ -78,7 +82,7 @@ module.exports = {
         amazonMws.reports.search({
             'Version': '2009-01-01',
             'Action': 'GetReport',
-            'SellerId': '',
+            'SellerId': conf.MWSseller_id,
             'ReportId': reportID
         }, function (error, response) {
             if (error) {
@@ -94,32 +98,32 @@ module.exports = {
         });
     },
 
-    removeItemFromStore: function (SKU, quantity) {
+    removeItemFromStore: function (SKU, quantity, callback) {
         if (!isNaN(quantity) && typeof quantity === 'number') {
             quantity--;
         }
         var xmlFeed =
             '<?xml version="1.0" encoding="utf-8" ?>\n' +
             '<AmazonEnvelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="amznenvelope.xsd">\n' +
-            '<Header>\n' +
-                '<DocumentVersion>1.01</DocumentVersion>\n' +
-                '<MerchantIdentifier></MerchantIdentifier>\n' +
-            '</Header>\n' +
-            '<MessageType>Inventory</MessageType>\n' +
-            '<Message>\n' +
-                '<MessageID>1</MessageID>\n' +
-                '<OperationType>Update</OperationType>\n' +
-                '<Inventory>\n' +
-                    '<SKU>' + SKU + '</SKU>\n' +
-                    '<Quantity>' + quantity + '</Quantity>\n' +
-                '</Inventory>\n' +
-            '</Message>\n' +
+                '<Header>\n' +
+                    '<DocumentVersion>1.01</DocumentVersion>\n' +
+                    '<MerchantIdentifier>' + conf.MWSseller_id + '</MerchantIdentifier>\n' +
+                '</Header>\n' +
+                '<MessageType>Inventory</MessageType>\n' +
+                '<Message>\n' +
+                    '<MessageID>1</MessageID>\n' +
+                    '<OperationType>Update</OperationType>\n' +
+                    '<Inventory>\n' +
+                        '<SKU>' + SKU + '</SKU>\n' +
+                        '<Quantity>' + quantity + '</Quantity>\n' +
+                    '</Inventory>\n' +
+                '</Message>\n' +
             '</AmazonEnvelope>';
 
         amazonMws.feeds.submit({
             'Version': '2009-01-01',
             'Action': 'SubmitFeed',
-            'SellerId': '',
+            'SellerId': conf.MWSseller_id,
             'FeedType': '_POST_INVENTORY_AVAILABILITY_DATA_',
             'FeedContent': xmlFeed
         }, function (error, response) {
@@ -127,7 +131,29 @@ module.exports = {
                 console.log('error ', error);
                 return;
             }
-            console.log('response', response);
+
+            setTimeout(function () {
+                callback(response.FeedSubmissionInfo.FeedSubmissionId, callback);
+            }, 60000);
+        });
+    },
+
+    checkRemoveItem: function (feedID, callback) {
+        amazonMws.feeds.submit({
+            'Version': '2009-01-01',
+            'Action': 'GetFeedSubmissionResult',
+            'SellerId': conf.MWSseller_id,
+            'FeedSubmissionId': feedID
+        }, function (error, response) {
+            if (error) {
+                console.log('error ', error);
+                callback('KO');
+            } else if (response.AmazonEnvelope.Message.ProcessingReport.ProcessingSummary.MessagesProcessed === "1" &&
+                response.AmazonEnvelope.Message.ProcessingReport.ProcessingSummary.MessagesSuccessful === "1") {
+                callback('OK');
+            } else {
+                callback('KO');
+            }
         });
     }
 };

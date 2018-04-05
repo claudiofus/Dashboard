@@ -1,14 +1,11 @@
+'use strict';
 var express = require('express');
 var http = require('http');
-var fs = require('fs');
 var app = express();
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
-var filePath = __dirname + '/modules/config.json';
 
-// Read file for configurations
-var fileConf = fs.readFileSync(filePath, 'utf8');
-var conf = JSON.parse(fileConf);
+const conf = require('./modules/config');
 conf.authenticated = false;
 
 server.listen(8000);

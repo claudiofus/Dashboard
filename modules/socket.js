@@ -1,3 +1,4 @@
+'use strict';
 module.exports = function (io, conf) {
     const db = require('../database/StoreProducts');
     var fs = require('fs');
@@ -57,7 +58,30 @@ module.exports = function (io, conf) {
         });
 
         socket.on('updateQuantity', function (UPC) {
-            mwsServices.productRequest(UPC);
+            mwsServices.productRequest(UPC, function (result, item) {
+                if (result === 'OK') {
+                    var params = {
+                        TableName: 'StoreProducts',
+                        Item: {
+                            UPC: UPC,
+                            CreatedAt: new Date().toISOString(),
+                            Description: item.Description,
+                            Price: item.Price,
+                            Quantity: item.Quantity
+                        }
+                    };
+                    db.put(params, function (result) {
+                        if (result === 'OK') {
+                            socket.emit('getInfo');
+                            console.log("Tutto OK");
+                        }
+                    });
+                } else if (result === 'KO') {
+                    console.log("!!!!!!!!KO");
+                } else {
+                    console.log("?????????? COME SONO ARRIVATO QUI?????");
+                }
+            });
         });
 
         socket.on('getInfo', function (callback) {

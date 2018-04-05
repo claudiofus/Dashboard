@@ -1,9 +1,11 @@
+'use strict';
 var AWS = require("aws-sdk");
+const conf = require('./../modules/config');
 AWS.config.update({
-    region: '',
-    endpoint: '',
-    accessKeyId: '',
-    secretAccessKey: ''
+    region: "eu-west-3",
+    endpoint: "https://dynamodb.eu-west-3.amazonaws.com",
+    accessKeyId: conf.AWSaccess_key,
+    secretAccessKey: conf.AWSsecretKey
 });
 
 var dynamodb = new AWS.DynamoDB();
