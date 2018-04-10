@@ -6,11 +6,11 @@
     <meta name="description" content="Dashboard for Amazon">
     <meta name="author" content="Claudio Fusillo">
     <link rel="shortcut icon" href="/public/images/img.png">
-
-    <title>Fatture</title>
-
     <link rel="stylesheet" href="/public/stylesheets/bootstrap.css">
     <link href="/public/stylesheets/style2.css" rel="stylesheet">
+    <title>Fatture</title>
+    <script src="/public/javascripts/jquery.js"></script>
+    <script src="/public/javascripts/bootstrap.js"></script>
 </head>
 
 <body>
@@ -154,8 +154,6 @@
     <a id="downloadPdf"></a>
 </div>
 <!--https://github.com/T00rk/bootstrap-material-datetimepicker-->
-<script src="/public/javascripts/jquery.js"></script>
-<script src="/public/javascripts/bootstrap.js"></script>
 <script src="/public/javascripts/momentjs.js"></script>
 <script src="/public/javascripts/material.js"></script>
 <script src="/public/javascripts/datepicker.js"></script>
@@ -208,9 +206,16 @@
             return false;
         }
 
+        var startDate = document.getElementsByTagName("input")[0].value;
+        var endDate = document.getElementsByTagName("input")[1].value;
+        if (startDate && endDate && moment(startDate).isAfter(endDate)) {
+            alert('E\' necessario inserire date corrette, si prega di verificare.');
+            return false;
+        }
+
         socket.emit('getAttachment', {
-            startDate: document.getElementsByTagName("input")[0].value,
-            endDate: document.getElementsByTagName("input")[1].value,
+            startDate: startDate,
+            endDate: endDate,
             it: document.getElementsByTagName("input")[2].checked,
             de: document.getElementsByTagName("input")[3].checked,
             fr: document.getElementsByTagName("input")[4].checked,

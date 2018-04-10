@@ -810,3 +810,8 @@ input[type="text"]:focus ~ .highlight {
 .text-white {
     color: #fff;
 }
+
+.chart {
+    width: 100% !important;
+    min-height: 200px !important;
+}

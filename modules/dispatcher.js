@@ -1,9 +1,9 @@
 'use strict';
+const path = require("path");
+const {google} = require('googleapis');
+var OAuth2 = google.auth.OAuth2;
 module.exports = function (app, conf) {
     var module = {};
-    var path = require("path");
-    var {google} = require('googleapis');
-    var OAuth2 = google.auth.OAuth2;
     var oauth2Client = new OAuth2(conf.client_id, conf.client_secret, conf.redirect_uri);
 
     app.get('/', function (req, res) {
@@ -27,10 +27,13 @@ module.exports = function (app, conf) {
     app.get('/oauth2callback', function (req, res) {
         oauth2Client.getToken(req.query.code, function (err, tokens) {
             // Now tokens contains an access_token and an optional refresh_token. Save them.
-            if (!err) {
-                oauth2Client.setCredentials(tokens);
-                conf.tokens = tokens;
+            if (err) {
+                console.error(err);
+                return;
             }
+
+            oauth2Client.setCredentials(tokens);
+            conf.tokens = tokens;
         });
 
         google.options({auth: oauth2Client});

@@ -9,6 +9,8 @@
     <link href="/public/stylesheets/bootstrap.css" rel="stylesheet">
     <link href="/public/stylesheets/style2.css" rel="stylesheet">
     <title>Commissioni</title>
+    <script src="/public/javascripts/jquery.js"></script>
+    <script src="/public/javascripts/bootstrap.js"></script>
 </head>
 
 <body>
@@ -134,14 +136,12 @@
                     </div>
                 </div>
                 <div class="row">
-                    <canvas id="myChart" style="width: 100% !important;"></canvas>
+                    <canvas id="myChart" class="chart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<script src="/public/javascripts/jquery.js"></script>
-<script src="/public/javascripts/bootstrap.js"></script>
 <script src="/public/javascripts/momentjs.js"></script>
 <script src="/public/javascripts/charts.js"></script>
 <script src="/socket.io/socket.io.js"></script>
@@ -154,9 +154,16 @@
     var amazPerc, shipPerc, storeProducts;
 
     $(document).ready(function () {
-        socket.emit('getInfo', function (items) {
+        socket.emit('getInfo', function (err, items) {
+            if (err) {
+                console.error(err);
+            }
             storeProducts = items;
-            socket.emit('readConf', function (conf) {
+            socket.emit('readConf', function (err, conf) {
+                if (err) {
+                    console.error(err);
+                }
+
                 for (var key in conf) {
                     if (key === 'amazPerc' && conf.hasOwnProperty(key)) {
                         amazPerc = parseInt(conf[key]);
@@ -252,6 +259,7 @@
         };
 
         var ctx = document.getElementById('myChart').getContext('2d');
+        $('#myChart').addClass('chart');
         lineChart = new Chart(ctx, config);
         window.myLine = lineChart;
     }

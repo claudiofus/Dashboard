@@ -1,9 +1,10 @@
-module.exports = function (io) {
-    var {google} = require('googleapis');
-    var gmail = google.gmail('v1');
-    var module = {};
+const {google} = require('googleapis');
+var gmail = google.gmail('v1');
 
-    module.getMessagesID = function (params, callback) {
+module.exports = {
+    getMessagesID: function (params, callback) {
+        callback = (typeof callback === 'function') ? callback : function () {
+        };
         var query = '';
         if (params.it) query += 'from:marketplace-messages@amazon.it';
         if (params.de) query += ' || from:marketplace-messages@amazon.de';
@@ -19,63 +20,66 @@ module.exports = function (io) {
             includeSpamTrash: true
         }, function (err, response) {
             if (err) {
-                console.log('The API returned an error: ' + err);
-                io.sockets.emit('sendError', errorMapper(err.code));
+                console.error('The API returned an error: ' + err);
+                callback(err, null);
+                return;
             }
             var messages = [];
             if (response.data.messages.length === 0) {
-                console.log('No messages found.');
+                console.error('No messages found.');
+                callback("No messages found.", null);
             } else {
                 messages = response.data.messages;
             }
 
-            for (var i = 0; i < messages.length; i++) {
-                callback(messages[i].id, module.getAttachment);
-            }
+            callback(null, messages);
         });
-    };
+    },
 
-    module.getMessage = function (messageID, callback) {
+    getMessage: function (err, messageID, callback) {
+        callback = (typeof callback === 'function') ? callback : function () {
+        };
+
+        if (err) {
+            console.error(err);
+            callback(err, null);
+        }
+
         gmail.users.messages.get({
             userId: 'me',
             id: messageID
         }, function (err, response) {
             if (err) {
-                console.log('The API returned an error: ' + err);
-                io.sockets.emit('sendError', errorMapper(err.code));
+                console.error('The API returned an error: ' + err);
             }
 
             var parts = response.data.payload.parts;
-            for (var j = 0; j < parts.length; j++) {
-                if (parts[j].mimeType === "application/pdf") {
-                    callback(messageID, parts[j].body.attachmentId);
-                }
+            if (parts.length === 0) {
+                callback("No payload parts found.", null);
             }
-        });
-    };
 
-    module.getAttachment = function (messageID, attachmentID) {
+            callback(null, messageID, parts);
+        });
+    },
+
+    getAttachment: function (err, messageID, attachmentID, callback) {
+        if (err) {
+            console.error(err);
+            callback(err, null);
+        }
+
         gmail.users.messages.attachments.get({
             userId: 'me',
             messageId: messageID,
             id: attachmentID
         }, function (err, response) {
             if (err) {
-                console.log('The API returned an error: ' + err);
-                io.sockets.emit('sendError', errorMapper(err.code));
+                console.error('The API returned an error: ' + err);
+                callback(err, null);
             }
 
             var pdfBase64 = response.data.data.replace(/-/g, '+').replace(/_/g, '/');
-            io.sockets.emit('emitPDF', pdfBase64);
+            callback(null, pdfBase64);
         });
-    };
-
-    function errorMapper(code) {
-        switch (code) {
-            case 401:
-                return "E' necessario effettuare il login."
-        }
     }
-
-    return module;
 };

@@ -1268,15 +1268,15 @@ $(document).ready(function () {
     var email = $('#email');
     end.bootstrapMaterialDatePicker
        ({
-           weekStart: 1, format: 'DD/MM/YYYY', time: false, lang: 'it', cancelText: 'Annulla'
+           weekStart: 1, format: 'DD/MM/YYYY', time: false, lang: 'it', cancelText: 'Esci'
        });
     start.bootstrapMaterialDatePicker
          ({
-             weekStart: 1, format: 'DD/MM/YYYY', time: false, lang: 'it', cancelText: 'Annulla'
+             weekStart: 1, format: 'DD/MM/YYYY', time: false, lang: 'it', cancelText: 'Esci'
          }).on('change', function (e, date) {
         end.bootstrapMaterialDatePicker('setMinDate', date);
         end.bootstrapMaterialDatePicker({
-               weekStart: 1, format: 'DD/MM/YYYY', time: false, lang: 'it', cancelText: 'Annulla'
+               weekStart: 1, format: 'DD/MM/YYYY', time: false, lang: 'it', cancelText: 'Esci'
            })
            .data('plugin_bootstrapMaterialDatePicker')._fireCalendar();
     });
