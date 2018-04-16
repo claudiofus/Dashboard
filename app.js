@@ -1,6 +1,6 @@
 'use strict';
 const express = require('express');
-var app = express();
+const app = express();
 
 app.use(express.static(__dirname + '/'));
 

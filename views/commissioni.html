@@ -154,6 +154,7 @@
     var amazPerc, shipPerc, storeProducts;
 
     $(document).ready(function () {
+        $('#months').find('option:eq(' + currMonth + ')').prop('selected', true);
         socket.emit('getInfo', function (err, items) {
             if (err) {
                 console.error(err);
@@ -175,7 +176,6 @@
                 drawChart(currMonth);
             });
 
-            $('#months').find('option:eq(' + currMonth + ')').prop('selected', true);
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
 

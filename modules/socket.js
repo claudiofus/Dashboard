@@ -1,11 +1,12 @@
 'use strict';
 const db = require('../database/dbCRUD');
 const Product = require('../classes/Product');
+const Factories = require('../factories/Factories');
+const successLog = require('./logger').successlog;
+const errorLog = require('./logger').errorlog;
 const fs = require('fs');
 const {google} = require('googleapis');
-const gmailApi = require('./gmail');
-const mwsServices = require('../modules/amazonServices');
-let scopes = ['https://www.googleapis.com/auth/gmail.readonly'];
+const scopes = ['https://www.googleapis.com/auth/gmail.readonly'];
 let OAuth2 = google.auth.OAuth2;
 let filePath = __dirname + '/config.json';
 
@@ -23,33 +24,32 @@ module.exports = function (io, conf) {
         });
 
         socket.on('getAttachment', function (params) {
-            gmailApi.getMessagesID(params, function (err, messages) {
-                if (err) {
-                    console.error('The API returned an error: ' + err);
-                    io.emit('sendError', errorMapper(err.code));
-                } else {
-                    for (let i = 0; i < messages.length; i++) {
-                        gmailApi.getMessage(null, messages[i].id, function (err, messageID, parts) {
-                            if (err) {
-                                console.error('The API returned an error: ' + err);
-                                io.emit('sendError', errorMapper(err.code));
-                                return;
+            Factories.getMessagesID(params)
+                .then(messages => {
+                    return Promise.all(messages.map(function (message) {
+                        return Factories.getMessage(message.id);
+                    }));
+                })
+                .then(MessagesIDArray => {
+                    return Promise.all(MessagesIDArray.map(function (message) {
+                        let messageID = message[0];
+                        let parts = message[1];
+                        for (let j = 0; j < parts.length; j++) {
+                            if (parts[j].mimeType === "application/pdf") {
+                                return Factories.getAttachments(messageID, parts[j].body.attachmentId);
                             }
-                            for (let j = 0; j < parts.length; j++) {
-                                if (parts[j].mimeType === "application/pdf") {
-                                    gmailApi.getAttachment(null, messageID, parts[j].body.attachmentId, function (err, pdfBase64) {
-                                        if (err) {
-                                            console.error('The API returned an error: ' + err);
-                                            io.emit('sendError', errorMapper(err.code));
-                                        }
-                                        io.emit('emitPDF', pdfBase64);
-                                    });
-                                }
-                            }
-                        });
-                    }
-                }
-            });
+                        }
+                    }));
+                })
+                .then(pdfArray => {
+                    return Promise.all(pdfArray.map(function (pdf) {
+                        io.emit('emitPDF', pdf);
+                    }));
+                })
+                .catch(err => {
+                    errorLog.error('Si è verificato un errore: ' + err.message);
+                    io.emit('sendError', err.message);
+                });
         });
 
         socket.on('writeConf', function (params) {
@@ -88,81 +88,66 @@ module.exports = function (io, conf) {
             let prd = new Product(UPC);
             prd.setCreationDate(new Date());
             db.put({TableName: 'TempProducts', Item: prd}, function (err) {
-                if (err) console.error(err);
-                console.log("Tutto OK");
+                if (err) errorLog.error(err);
+                successLog.info("Inserito un elemento in TempProducts.");
                 socket.emit('refreshTables');
             });
 
-            // mwsServices.listMatchingProductsPr(UPC).then(prd => {
-            //    mwsServices.requestReportPr(prd).then(reportID, prd => {
-            //        mwsServices.getReportPr(reportID, prd).then(prd => {
-            //            mwsServices.removeItemFromStorePr(prd).then(feedID => {
-            //                mwsServices.checkRemoveItemPr(feedID).then(prd => {
-            //                    logResult(prd);
-            //                })
-            //            })
-            //        })
-            //    })
-            // });
+            Factories.listMatchingProducts(UPC, prd)
+                .then(prd => {
+                    return Factories.requestReport(prd);
+                })
+                .then(obj => {
+                    let reportID = obj[0];
+                    let prd = obj[1];
+                    return Factories.getReportIDRequest(reportID, prd);
+                })
+                .then(obj => {
+                    let reportID = obj[0];
+                    let prd = obj[1];
+                    return Factories.getReport(reportID, prd);
+                })
+                .then(prd => {
+                    return Factories.removeItemFromStore(prd)
+                })
+                .then(obj => {
+                    let feedID = obj[0];
+                    let prd = obj[1];
+                    return Factories.checkRemoveItem(feedID, prd)
+                })
+                .then(prd => {
+                    successLog.info("PRODOTTO: " + prd);
+                    db.put({TableName: 'StoreProducts', Item: prd}, function (err) {
+                        if (err) errorLog.error(err);
 
+                        successLog.info("Prodotto aggiunto in StoreProducts.");
+                        let params = {
+                            TableName: 'TempProducts',
+                            Key: {"UPC": prd.UPC, "CreatedAt": prd.CreatedAt}
+                        };
+                        db.delete(params, function (err) {
+                            if (err) errorLog.error(err);
 
-            mwsServices.listMatchingProducts(UPC, function (err, prd) {
-                if (err) {
-                    console.error('The API returned an error: ' + err);
-                    socket.emit('sendError', err.message);
-                    return;
-                }
-
-                setTimeout(function () {
-                    mwsServices.requestReport(prd, function (err, reportID, prd) {
-                        if (err) console.error(err);
-                        mwsServices.getReportIDRequest(reportID, prd, function (err, reportID, prd) {
-                            if (err) console.error(err);
-                            mwsServices.getReport(reportID, prd, function (err, prd) {
-                                if (err) console.error(err);
-                                mwsServices.removeItemFromStore(prd, function (err, feedID) {
-                                    if (err) console.error(err);
-                                    mwsServices.checkRemoveItem(feedID, function (err) {
-                                        if (err) console.error(err);
-                                        console.log("PRODOTTO: " + prd);
-                                        db.put({TableName: 'StoreProducts', Item: prd}, function (err) {
-                                            if (err) console.error(err);
-
-                                            console.log("Prodotto aggiunto in StoreProducts.");
-                                            let params = {
-                                                TableName: 'TempProducts',
-                                                Key: {"UPC": prd.UPC, "CreatedAt": prd.CreatedAt}
-                                            };
-                                            db.delete(params, function (err) {
-                                                if (err) console.error(err);
-
-                                                console.log("Prodotto rimosso da TempProducts.");
-                                                socket.emit('refreshTables');
-                                            });
-                                        });
-                                    });
-                                });
-                            });
+                            successLog.info("Prodotto rimosso da TempProducts.");
+                            socket.emit('refreshTables');
                         });
                     });
-                }, 60000);
-            });
+                })
+                .catch(err => {
+                    errorLog.error('Errore: ' + err.message);
+                    io.emit('sendError', err.message);
+                });
         });
 
         socket.on('getInfo', function (callback) {
             callback = (typeof callback === 'function') ? callback : function () {
             };
-            let params = {
-                TableName: "StoreProducts",
-                limit: 15
-            };
-            db.scan(params, function (err, items) {
-                if (err) console.error(err);
+            db.scan({TableName: "StoreProducts", limit: 15}, function (err, items) {
+                if (err) errorLog.error(err);
 
                 items.sort(orderDesc);
-                let params = {TableName: "TempProducts"};
-                db.scan(params, function (err, tempItems) {
-                    if (err) console.error(err);
+                db.scan({TableName: "TempProducts"}, function (err, tempItems) {
+                    if (err) errorLog.error(err);
 
                     tempItems.sort(orderDesc);
                     if (items && tempItems) {
@@ -180,51 +165,4 @@ function orderDesc(a, b) {
     if (a.CreatedAt < b.CreatedAt) return 1;
     if (a.CreatedAt > b.CreatedAt) return -1;
     return 0;
-}
-
-function errorMapper(code) {
-    switch (code) {
-        case 401:
-            return "E' necessario effettuare il login."
-    }
-}
-
-
-function requestReport(res) {
-    return mwsServices.requestReportPr(res);
-}
-
-function getReportIDRequest(res) {
-    return mwsServices.getReportIDRequestPr(res);
-}
-
-function getReport(res) {
-    return mwsServices.getReportPr(res);
-}
-
-function removeItemFromStore(res) {
-    return mwsServices.removeItemFromStorePr(res);
-}
-
-function checkRemoveItem(res) {
-    return mwsServices.checkRemoveItemPr(res);
-}
-
-function logResult(prd) {
-    console.log("PRODOTTO: " + prd);
-    db.put({TableName: 'StoreProducts', Item: prd}, function (err) {
-        if (err) console.error(err);
-
-        console.log("Prodotto aggiunto in StoreProducts.");
-        let params = {
-            TableName: 'TempProducts',
-            Key: {"UPC": prd.UPC, "CreatedAt": prd.CreatedAt}
-        };
-        db.delete(params, function (err) {
-            if (err) console.error(err);
-
-            console.log("Prodotto rimosso da TempProducts.");
-            socket.emit('refreshTables');
-        });
-    });
 }

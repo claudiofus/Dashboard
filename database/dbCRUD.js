@@ -1,6 +1,8 @@
 'use strict';
 const AWS = require("aws-sdk");
 const conf = require('./../modules/config');
+const successLog = require('../modules/logger').successlog;
+const errorLog = require('../modules/logger').errorlog;
 AWS.config.update({
     region: "eu-west-3",
     endpoint: "https://dynamodb.eu-west-3.amazonaws.com",
@@ -8,14 +10,14 @@ AWS.config.update({
     secretAccessKey: conf.AWSsecretKey
 });
 
-var dynamodb = new AWS.DynamoDB();
-var docClient = new AWS.DynamoDB.DocumentClient();
+let dynamodb = new AWS.DynamoDB();
+let docClient = new AWS.DynamoDB.DocumentClient();
 
 module.exports = {
     initStorePrd: function (callback) {
         callback = (typeof callback === 'function') ? callback : function () {
         };
-        var params = {
+        let params = {
             TableName: "StoreProducts",
             KeySchema: [
                 {AttributeName: "UPC", KeyType: "HASH"},
@@ -29,13 +31,13 @@ module.exports = {
         };
         dynamodb.createTable(params, function (err, data) {
             if (err && err.statusCode === 400) {
-                console.error(err.message);
+                errorLog.error(err.message);
                 callback(null);
             } else if (err) {
-                console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
+                successLog.info("Created table. Table description JSON:", JSON.stringify(data, null, 2));
                 callback(null, data);
             }
         });
@@ -43,7 +45,7 @@ module.exports = {
     initTempProducts: function (callback) {
         callback = (typeof callback === 'function') ? callback : function () {
         };
-        var params = {
+        let params = {
             TableName: "TempProducts",
             KeySchema: [
                 {AttributeName: "UPC", KeyType: "HASH"},
@@ -57,13 +59,13 @@ module.exports = {
         };
         dynamodb.createTable(params, function (err, data) {
             if (err && err.statusCode === 400) {
-                console.error(err.message);
+                errorLog.error(err.message);
                 callback(null);
             } else if (err) {
-                console.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to create table. Error JSON:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
+                successLog.info("Created table. Table description JSON:", JSON.stringify(data, null, 2));
                 callback(null, data);
             }
         });
@@ -73,10 +75,10 @@ module.exports = {
         };
         docClient.put(params, function (err, data) {
             if (err) {
-                console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("Added item:", JSON.stringify(data, null, 2));
+                successLog.info("Added item:", JSON.stringify(data, null, 2));
                 callback(null, data);
             }
         });
@@ -86,10 +88,10 @@ module.exports = {
         };
         docClient.get(params, function (err, data) {
             if (err) {
-                console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
+                successLog.info("GetItem succeeded:", JSON.stringify(data, null, 2));
                 callback(null, data);
             }
         });
@@ -99,10 +101,10 @@ module.exports = {
         };
         docClient.update(params, function (err, data) {
             if (err) {
-                console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
+                successLog.info("UpdateItem succeeded:", JSON.stringify(data, null, 2));
                 callback(null, data);
             }
         });
@@ -112,10 +114,10 @@ module.exports = {
         };
         docClient.delete(params, function (err, data) {
             if (err) {
-                console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
+                successLog.info("DeleteItem succeeded:", JSON.stringify(data, null, 2));
                 callback(null, data);
             }
         });
@@ -125,12 +127,12 @@ module.exports = {
         };
         docClient.query(params, function (err, data) {
             if (err) {
-                console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to query. Error:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("Query succeeded.");
+                successLog.info("Query succeeded.");
                 data.Items.forEach(function (item) {
-                    console.log(item);
+                    successLog.info(item);
                 });
                 callback(null, data.Items);
             }
@@ -141,14 +143,15 @@ module.exports = {
         };
         docClient.scan(params, function onScan(err, data) {
             if (err) {
-                console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
+                errorLog.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
                 callback(err, null);
             } else {
-                console.log("Scan succeeded.");
+                successLog.info("Scan succeeded: " + params.TableName);
+                successLog.info("Result: " + JSON.stringify(data));
 
                 // continue scanning if we have more items, because scan can retrieve a maximum of 1MB of data
                 if (typeof data.LastEvaluatedKey !== "undefined") {
-                    console.log("Scanning for more...");
+                    successLog.info("Scanning for more...");
                     params.ExclusiveStartKey = data.LastEvaluatedKey;
                     docClient.scan(params, onScan);
                 }

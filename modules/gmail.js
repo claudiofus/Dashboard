@@ -1,85 +1,81 @@
 const {google} = require('googleapis');
-var gmail = google.gmail('v1');
+const util = require('util');
+const successLog = require('./logger').successlog;
+const errorLog = require('./logger').errorlog;
+const gmail = google.gmail('v1');
 
 module.exports = {
-    getMessagesID: function (params, callback) {
-        callback = (typeof callback === 'function') ? callback : function () {
-        };
-        var query = '';
-        if (params.it) query += 'from:marketplace-messages@amazon.it';
-        if (params.de) query += ' || from:marketplace-messages@amazon.de';
-        if (params.fr) query += ' || from:marketplace-messages@amazon.fr';
-        if (params.es) query += ' || from:marketplace-messages@amazon.es';
-        if (params.uk) query += ' || from:marketplace-messages@amazon.co.uk';
-        if (params.startDate) query += ' after:' + params.startDate.split('/').reverse().join('/') + ' ';
-        if (params.endDate) query += ' before:' + params.endDate.split('/').reverse().join('/') + ' ';
+    getMessagesID: function (params) {
+        return new Promise(function (resolve, reject) {
+            let query = '';
+            if (params.it) query += 'from:marketplace-messages@amazon.it';
+            if (params.de) query += ' || from:marketplace-messages@amazon.de';
+            if (params.fr) query += ' || from:marketplace-messages@amazon.fr';
+            if (params.es) query += ' || from:marketplace-messages@amazon.es';
+            if (params.uk) query += ' || from:marketplace-messages@amazon.co.uk';
+            if (params.startDate) query += ' after:' + params.startDate.split('/').reverse().join('/') + ' ';
+            if (params.endDate) query += ' before:' + params.endDate.split('/').reverse().join('/') + ' ';
 
-        gmail.users.messages.list({
-            userId: 'me',
-            q: query,
-            includeSpamTrash: true
-        }, function (err, response) {
-            if (err) {
-                console.error('The API returned an error: ' + err);
-                callback(err, null);
-                return;
-            }
-            var messages = [];
-            if (response.data.messages.length === 0) {
-                console.error('No messages found.');
-                callback("No messages found.", null);
-            } else {
-                messages = response.data.messages;
-            }
-
-            callback(null, messages);
-        });
+            let list = util.promisify(gmail.users.messages.list);
+            list({
+                userId: 'me',
+                q: query,
+                includeSpamTrash: true
+            }).then(function (response) {
+                let messages = response.data.messages;
+                if (messages && messages.length > 0) {
+                    resolve(messages);
+                } else {
+                    errorLog.error('No messages found.');
+                    reject(Error('Non sono state trovate fatture.'));
+                }
+            }).catch(function (error) {
+                errorLog.error('Error getMessagesID', error);
+                reject(Error(error.message));
+            });
+        })
     },
 
-    getMessage: function (err, messageID, callback) {
-        callback = (typeof callback === 'function') ? callback : function () {
-        };
-
-        if (err) {
-            console.error(err);
-            callback(err, null);
-        }
-
-        gmail.users.messages.get({
-            userId: 'me',
-            id: messageID
-        }, function (err, response) {
-            if (err) {
-                console.error('The API returned an error: ' + err);
-            }
-
-            var parts = response.data.payload.parts;
-            if (parts.length === 0) {
-                callback("No payload parts found.", null);
-            }
-
-            callback(null, messageID, parts);
-        });
+    getMessage: function (messageID) {
+        return new Promise(function (resolve, reject) {
+            let message = util.promisify(gmail.users.messages.get);
+            message({
+                userId: 'me',
+                id: messageID
+            }).then(function (response) {
+                let parts = response.data.payload.parts;
+                if (parts && parts.length > 0) {
+                    resolve([messageID, parts]);
+                } else {
+                    errorLog.error('No payload parts found.');
+                    reject(Error('Errore nel recupero dell\'allegato.'));
+                }
+            }).catch(function (error) {
+                errorLog.error('Error getMessage', error);
+                reject(Error(error.message));
+            });
+        })
     },
 
-    getAttachment: function (err, messageID, attachmentID, callback) {
-        if (err) {
-            console.error(err);
-            callback(err, null);
-        }
-
-        gmail.users.messages.attachments.get({
-            userId: 'me',
-            messageId: messageID,
-            id: attachmentID
-        }, function (err, response) {
-            if (err) {
-                console.error('The API returned an error: ' + err);
-                callback(err, null);
-            }
-
-            var pdfBase64 = response.data.data.replace(/-/g, '+').replace(/_/g, '/');
-            callback(null, pdfBase64);
-        });
+    getAttachment: function (messageID, attachmentID) {
+        return new Promise(function (resolve, reject) {
+            let attachments = util.promisify(gmail.users.messages.attachments.get);
+            attachments({
+                userId: 'me',
+                messageId: messageID,
+                id: attachmentID
+            }).then(function (response) {
+                if (response.data && response.data.data) {
+                    let pdfBase64 = response.data.data.replace(/-/g, '+').replace(/_/g, '/');
+                    resolve(pdfBase64);
+                } else {
+                    errorLog.error('Error getAttachment');
+                    reject(Error('Il file allegato risulta corrotto.'));
+                }
+            }).catch(function (error) {
+                errorLog.error('Error getAttachment', error);
+                reject(Error(error.message));
+            });
+        })
     }
 };

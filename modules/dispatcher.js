@@ -1,10 +1,11 @@
 'use strict';
 const path = require("path");
 const {google} = require('googleapis');
-var OAuth2 = google.auth.OAuth2;
+const errorLog = require('./logger').errorlog;
+let OAuth2 = google.auth.OAuth2;
 module.exports = function (app, conf) {
-    var module = {};
-    var oauth2Client = new OAuth2(conf.client_id, conf.client_secret, conf.redirect_uri);
+    let module = {};
+    let oauth2Client = new OAuth2(conf.client_id, conf.client_secret, conf.redirect_uri);
 
     app.get('/', function (req, res) {
         res.sendFile(path.join(__dirname + '/../views/login.html'));
@@ -28,7 +29,7 @@ module.exports = function (app, conf) {
         oauth2Client.getToken(req.query.code, function (err, tokens) {
             // Now tokens contains an access_token and an optional refresh_token. Save them.
             if (err) {
-                console.error(err);
+                errorLog.error(err);
                 return;
             }
 

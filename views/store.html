@@ -99,6 +99,8 @@
             <div class="col-sm-7 col-md-7 table-responsive">
                 <label class="groupNoMargin" style="margin-bottom: 30px;">
                     Ultimi articoli venduti ed in elaborazione
+                    <a href="#" class="glyphicon glyphicon-info-sign"
+                       onclick="alert('Se la riga è bianca l\'articolo venduto è in lavorazione, se la riga è rossa si è verificato un errore pertanto è necessario controllare sullo store di Amazon.')"></a>
                 </label>
                 <table class="table">
                     <thead>
@@ -111,6 +113,9 @@
                     <tr id="tempItems" style="display: none"></tr>
                     </tbody>
                 </table>
+                <div class="form-group">
+                    <button class="btn btn-primary">RIMUOVI TUTTO</button>
+                </div>
             </div>
         </div>
         <div class="col-sm-12 col-md-12">
@@ -125,7 +130,7 @@
                         <th>Descrizione</th>
                         <th>Ora vendita</th>
                         <th>Prezzo</th>
-                        <th>Quantità</th>
+                        <th>Rimanenti</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -147,9 +152,6 @@
         refreshTables();
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
-        });
-        $("#UPC").keyup(function() {
-            $("#UPC").val(this.value.match(/[0-9]*/));
         });
     });
 
@@ -182,7 +184,12 @@
             var itemsEl = $('#items');
             tempItemsEl.siblings().remove();
             for (var i = 0; i < tempItems.length; i++) {
-                row = $('<tr style="display:none;">\n' +
+                var d = moment.duration(moment(new Date()).diff(moment(tempItems[i].CreatedAt)));
+                var tableRow = '<tr style="display:none;">\n';
+                if (d.get("days") > 1 || d.get("hours") > 1 || d.get("minutes") > 30)
+                    tableRow = '<tr style="display:none; background-color: #f86c6b;">\n';
+
+                row = $(tableRow +
                     '<td>' + tempItems[i].UPC + '</td>\n' +
                     '<td>' + moment(tempItems[i].CreatedAt).format('lll') + '</td>\n' +
                     '</tr>');
