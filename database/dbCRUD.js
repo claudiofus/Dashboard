@@ -66,7 +66,14 @@ module.exports = {
                 callback(err, null);
             } else {
                 successLog.info("Created table. Table description JSON:", JSON.stringify(data, null, 2));
-                callback(null, data);
+                dynamodb.waitFor('tableExists', {TableName: "TempProducts"}, function (waitForErr, waitForData) {
+                    if (waitForErr) {
+                        console.log(waitForErr, waitForErr.stack); // an error occurred
+                    } else {
+                        console.log('Created ====>', JSON.stringify(waitForData, null, 2));
+                        callback(null, waitForData)
+                    }
+                });
             }
         });
     },
@@ -156,6 +163,26 @@ module.exports = {
                     docClient.scan(params, onScan);
                 }
                 callback(null, data.Items);
+            }
+        });
+    },
+    deleteTable: function (params, callback) {
+        callback = (typeof callback === 'function') ? callback : function () {
+        };
+        dynamodb.deleteTable(params, function (err, data) {
+            if (err) {
+                errorLog.error("Unable to delete table. Error JSON:", JSON.stringify(err, null, 2));
+                callback(err, null);
+            } else {
+                successLog.info("Deleted table. Table description JSON:", JSON.stringify(data, null, 2));
+                dynamodb.waitFor('tableNotExists', params, function (waitForErr, waitForData) {
+                    if (waitForErr) {
+                        console.log(waitForErr, waitForErr.stack); // an error occurred
+                    } else {
+                        console.log('Deleted ====>', JSON.stringify(waitForData, null, 2));
+                        callback(null, waitForData)
+                    }
+                });
             }
         });
     }

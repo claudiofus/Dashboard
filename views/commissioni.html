@@ -155,7 +155,7 @@
 
     $(document).ready(function () {
         $('#months').find('option:eq(' + currMonth + ')').prop('selected', true);
-        socket.emit('getInfo', function (err, items) {
+        socket.emit('getInfo', 9999999, function (err, items) {
             if (err) {
                 console.error(err);
             }
@@ -213,7 +213,7 @@
         }
 
         document.getElementById('totValue').innerText = total.toFixed(2) + ' €';
-        document.getElementById('average').innerText = (total / currDays).toFixed(2) + ' €';
+        document.getElementById('average').innerText = total !== 0 ? (total / currDays).toFixed(2) + ' €' : '0.00 €';
         document.getElementById('amazPerc').innerText = totalAmaz.toFixed(2) + ' €';
         document.getElementById('shipPerc').innerText = totalShip.toFixed(2) + ' €';
 

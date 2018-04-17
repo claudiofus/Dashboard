@@ -114,7 +114,9 @@
                     </tbody>
                 </table>
                 <div class="form-group">
-                    <button class="btn btn-primary">RIMUOVI TUTTO</button>
+                    <button style="display: none;" id="removeAll" class="btn btn-primary" onclick="removeAll()">RIMUOVI
+                        TUTTO
+                    </button>
                 </div>
             </div>
         </div>
@@ -167,6 +169,13 @@
         refreshTables();
     });
 
+    function removeAll() {
+        socket.emit('removeAll', function () {
+            refreshTables();
+            document.getElementById("removeAll").style.display = "none";
+        });
+    }
+
     function enqueueReq() {
         if (document.getElementsByTagName("input")[0]) {
             socket.emit('updateQuantity', document.getElementsByTagName("input")[0].value);
@@ -176,13 +185,14 @@
     }
 
     function refreshTables() {
-        socket.emit('getInfo', function (err, items, tempItems) {
+        socket.emit('getInfo', 10, function (err, items, tempItems) {
             if (err) {
                 console.error(err);
             }
             var tempItemsEl = $('#tempItems');
             var itemsEl = $('#items');
             tempItemsEl.siblings().remove();
+            if (tempItems.length > 0) document.getElementById("removeAll").style.display = "block";
             for (var i = 0; i < tempItems.length; i++) {
                 var d = moment.duration(moment(new Date()).diff(moment(tempItems[i].CreatedAt)));
                 var tableRow = '<tr style="display:none;">\n';

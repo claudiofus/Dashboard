@@ -1,7 +1,6 @@
 'use strict';
 const _ = require('lodash');
 const conf = require('./config');
-const Product = require('../classes/Product');
 const successLog = require('./logger').successlog;
 const errorLog = require('./logger').errorlog;
 const amazonMws = require('../modules/amazon/amazon-mws')(conf.MWSaccess_key, conf.MWSsecret_key);
@@ -17,6 +16,7 @@ const amazonMws = require('../modules/amazon/amazon-mws')(conf.MWSaccess_key, co
 module.exports = {
     listMatchingProductsPr:
         function (query, prd) {
+            successLog.info("ListMatchingProducts: QUERY: " + query + " prd: " + JSON.stringify(prd));
             return new Promise(function (resolve, reject) {
                 amazonMws.products.search({
                     'Version': '2011-10-01',
@@ -25,14 +25,24 @@ module.exports = {
                     'MarketplaceId': conf.IT_Mrkt,
                     'Query': query
                 }).then(function (response) {
-                    prd.setASIN(response.Products.Product.Identifiers.MarketplaceASIN.ASIN);
-                    prd.setDescription(response.Products.Product.AttributeSets.ItemAttributes.Title);
-                    setTimeout(function () {
-                        resolve(prd);
-                    }, 60000);
+                    successLog.info("ListMatchingProducts: " + JSON.stringify(response));
+                    let ASIN = response.Products.Product.Identifiers.MarketplaceASIN.ASIN;
+                    let descr = response.Products.Product.AttributeSets.ItemAttributes.Title;
+                    if (ASIN && descr) {
+                        prd.setASIN(ASIN);
+                        prd.setDescription(descr);
+                        successLog.info("ASIN: " + ASIN);
+                        successLog.info("Description: " + descr);
+                        setTimeout(function () {
+                            resolve(prd);
+                        }, 60000);
+                    } else {
+                        errorLog.error('Errore ListMatchingProducts', 'ASIN o Titolo non definito');
+                        reject(Error('ASIN o Titolo non definito'));
+                    }
                 }).catch(function (error) {
-                    errorLog.error('Error ListMatchingProducts', error);
-                    reject(Error(error.message));
+                    errorLog.error('Errore ListMatchingProducts', error);
+                    reject(Error(error.Message));
                 });
             })
         },
@@ -45,13 +55,19 @@ module.exports = {
                     'SellerId': conf.MWSseller_id,
                     'ReportType': '_GET_MERCHANT_LISTINGS_DATA_LITE_'
                 }).then(function (response) {
-                    let reportID = response.ReportRequestInfo.ReportRequestId;
-                    setTimeout(function () {
-                        resolve([reportID, prd]);
-                    }, 60000);
+                    successLog.info("RequestReport: " + JSON.stringify(response));
+                    if (response.ReportRequestInfo.ReportRequestId) {
+                        let reportID = response.ReportRequestInfo.ReportRequestId;
+                        setTimeout(function () {
+                            resolve([reportID, prd]);
+                        }, 60000);
+                    } else {
+                        errorLog.error('Errore RequestReport', 'ReportRequestId non è definito');
+                        reject(Error('ReportRequestId non è definito'));
+                    }
                 }).catch(function (error) {
-                    errorLog.error('Error RequestReport', error);
-                    reject(Error(error.message));
+                    errorLog.error('Errore RequestReport', error);
+                    reject(Error(error.Message));
                 });
             });
         },
@@ -65,12 +81,18 @@ module.exports = {
                     'ReportTypeList.Type.1': '_GET_MERCHANT_LISTINGS_DATA_LITE_',
                     'ReportRequestIdList.Id.1': reportID
                 }).then(function (response) {
-                    setTimeout(function () {
-                        resolve([response.ReportInfo.ReportId, prd]);
-                    }, 60000);
+                    successLog.info("GetReportList: " + JSON.stringify(response));
+                    if (response.ReportInfo.ReportId) {
+                        setTimeout(function () {
+                            resolve([response.ReportInfo.ReportId, prd]);
+                        }, 60000);
+                    } else {
+                        errorLog.error('Errore GetReportList', 'ReportId non è definito');
+                        reject(Error('ReportRequestId non è definito'));
+                    }
                 }).catch(function (error) {
-                    errorLog.error('Error GetReportList', error);
-                    reject(Error(error.message));
+                    errorLog.error('Errore GetReportList', error);
+                    reject(Error(error.Message));
                 });
             });
         },
@@ -83,23 +105,24 @@ module.exports = {
                     'SellerId': conf.MWSseller_id,
                     'ReportId': reportID
                 }).then(function (response) {
-                    let itemToFind = _.find(response.data, {'product-id': prd.ASIN});
-                    successLog.info(itemToFind);
-                    if (itemToFind) {
-                        let SKU = Object.values(itemToFind)[0];
-                        let quantity = parseInt(Object.values(itemToFind)[1]);
-                        let price = Object.values(itemToFind)[2];
+                    successLog.info("GetReport: " + JSON.stringify(response));
+                    let itemFound = _.find(response.data, {'product-id': prd.ASIN});
+                    successLog.info('Item found:' + itemFound);
+                    if (itemFound && Object.values(itemFound)[0] && Object.values(itemFound)[1] && Object.values(itemFound)[2]) {
+                        let SKU = Object.values(itemFound)[0];
+                        let quantity = parseInt(Object.values(itemFound)[1]);
+                        let price = Object.values(itemFound)[2];
                         prd.setQuantity(quantity);
                         prd.setSKU(SKU);
                         prd.setPrice(price);
                         resolve(prd);
                     } else {
-                        errorLog.error('itemToFind is undefined');
-                        reject(Error('itemToFind is undefined'));
+                        errorLog.error('L\'articolo con codice UPC: ' + prd.UPC + 'non è stato trovato nell\'inventario.');
+                        reject(Error('L\'articolo con codice UPC: ' + prd.UPC + 'non è stato trovato nell\'inventario.'));
                     }
                 }).catch(function (error) {
-                    errorLog.error('Error GetReport', error);
-                    reject(Error(error.message));
+                    errorLog.error('Errore GetReport', error);
+                    reject(Error(error.Message));
                 });
             });
         },
@@ -124,7 +147,7 @@ module.exports = {
                     '</Inventory>\n' +
                     '</Message>\n' +
                     '</AmazonEnvelope>';
-
+                successLog.info("xml to SubmitFeed: " + xmlFeed);
                 amazonMws.feeds.submit({
                     'Version': '2009-01-01',
                     'Action': 'SubmitFeed',
@@ -132,11 +155,17 @@ module.exports = {
                     'FeedType': '_POST_INVENTORY_AVAILABILITY_DATA_',
                     'FeedContent': xmlFeed
                 }).then(function (response) {
-                    setTimeout(function () {
-                        resolve([response.FeedSubmissionInfo.FeedSubmissionId, prd]);
-                    }, 120000);
+                    successLog.info("SubmitFeed: " + JSON.stringify(response));
+                    if (response.FeedSubmissionInfo.FeedSubmissionId) {
+                        setTimeout(function () {
+                            resolve([response.FeedSubmissionInfo.FeedSubmissionId, prd]);
+                        }, 180000);
+                    } else {
+                        errorLog.error('Errore SubmitFeed', 'FeedSubmissionId non è definito');
+                        reject(Error('FeedSubmissionId non è definito'));
+                    }
                 }).catch(function (error) {
-                    errorLog.error('Error SubmitFeed', error);
+                    errorLog.error('Errore SubmitFeed', error);
                     reject(Error(error));
                 });
             });
@@ -150,6 +179,7 @@ module.exports = {
                     'SellerId': conf.MWSseller_id,
                     'FeedSubmissionId': feedID
                 }).then(function (response) {
+                    successLog.info("GetFeedSubmissionResult: " + JSON.stringify(response));
                     if (response.AmazonEnvelope.Message.ProcessingReport.ProcessingSummary.MessagesProcessed === "1" &&
                         response.AmazonEnvelope.Message.ProcessingReport.ProcessingSummary.MessagesSuccessful === "1") {
                         resolve(prd);
@@ -158,13 +188,9 @@ module.exports = {
                         reject(Error('Feed Processing with Warning or Errors.'));
                     }
                 }).catch(function (error) {
-                    errorLog.error('Error GetFeedSubmissionResult', error);
-                    reject(Error(error.message));
+                    errorLog.error('Errore GetFeedSubmissionResult', error);
+                    reject(Error(error.Message));
                 });
             });
         }
-};
-
-String.prototype.isNumber = function () {
-    return /^\d+$/.test(this);
 };

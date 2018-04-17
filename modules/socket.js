@@ -88,7 +88,10 @@ module.exports = function (io, conf) {
             let prd = new Product(UPC);
             prd.setCreationDate(new Date());
             db.put({TableName: 'TempProducts', Item: prd}, function (err) {
-                if (err) errorLog.error(err);
+                if (err) {
+                    errorLog.error(err);
+                    callback("Put in TempProducts error", null, null);
+                }
                 successLog.info("Inserito un elemento in TempProducts.");
                 socket.emit('refreshTables');
             });
@@ -118,7 +121,10 @@ module.exports = function (io, conf) {
                 .then(prd => {
                     successLog.info("PRODOTTO: " + prd);
                     db.put({TableName: 'StoreProducts', Item: prd}, function (err) {
-                        if (err) errorLog.error(err);
+                        if (err) {
+                            errorLog.error(err);
+                            callback("Put in StoreProducts error", null, null);
+                        }
 
                         successLog.info("Prodotto aggiunto in StoreProducts.");
                         let params = {
@@ -126,7 +132,10 @@ module.exports = function (io, conf) {
                             Key: {"UPC": prd.UPC, "CreatedAt": prd.CreatedAt}
                         };
                         db.delete(params, function (err) {
-                            if (err) errorLog.error(err);
+                            if (err) {
+                                errorLog.error(err);
+                                callback("Delete error", null, null);
+                            }
 
                             successLog.info("Prodotto rimosso da TempProducts.");
                             socket.emit('refreshTables');
@@ -139,23 +148,58 @@ module.exports = function (io, conf) {
                 });
         });
 
-        socket.on('getInfo', function (callback) {
+        socket.on('getInfo', function (limitNum, callback) {
             callback = (typeof callback === 'function') ? callback : function () {
             };
-            db.scan({TableName: "StoreProducts", limit: 15}, function (err, items) {
-                if (err) errorLog.error(err);
-
+            db.scan({TableName: "StoreProducts", Limit: limitNum}, function (err, items) {
+                if (err) {
+                    errorLog.error(err);
+                    callback("DB scan error", null, null);
+                }
                 items.sort(orderDesc);
                 db.scan({TableName: "TempProducts"}, function (err, tempItems) {
-                    if (err) errorLog.error(err);
+                    if (err) {
+                        errorLog.error(err);
+                        callback("TempProducts scan error", null, null);
+                    }
 
-                    tempItems.sort(orderDesc);
                     if (items && tempItems) {
+                        tempItems.sort(orderDesc);
                         callback(null, items, tempItems);
                     } else {
-                        callback("DB scan error", null, null);
+                        callback("TempProducts or StoreProducts scan error", null, null);
                     }
                 });
+            });
+        });
+
+        socket.on('removeAll', function (callback) {
+            callback = (typeof callback === 'function') ? callback : function () {
+            };
+            db.scan({TableName: "TempProducts"}, function (err, tempItems) {
+                if (err) {
+                    errorLog.error(err);
+                    callback("TempProducts scan error", null, null);
+                }
+
+                for (let i = 0; i < tempItems.length; i++) {
+                    let params = {
+                        TableName: "TempProducts",
+                        Key: tempItems[i],
+                        isLast: i === tempItems.length - 1
+                    };
+                    db.delete(params, function (err, data) {
+                        if (err) {
+                            console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+                        } else {
+                            console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
+                        }
+
+                        if (params.isLast) {
+                            callback(null, "OK");
+                        }
+                    });
+                }
             });
         });
     });

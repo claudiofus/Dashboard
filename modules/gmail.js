@@ -22,6 +22,7 @@ module.exports = {
                 q: query,
                 includeSpamTrash: true
             }).then(function (response) {
+                successLog.info("getMessagedID: " + JSON.stringify(response));
                 let messages = response.data.messages;
                 if (messages && messages.length > 0) {
                     resolve(messages);
@@ -43,6 +44,7 @@ module.exports = {
                 userId: 'me',
                 id: messageID
             }).then(function (response) {
+                successLog.info("getMessage: " + JSON.stringify(response));
                 let parts = response.data.payload.parts;
                 if (parts && parts.length > 0) {
                     resolve([messageID, parts]);
@@ -65,6 +67,7 @@ module.exports = {
                 messageId: messageID,
                 id: attachmentID
             }).then(function (response) {
+                successLog.info("getAttachment: " + JSON.stringify(response));
                 if (response.data && response.data.data) {
                     let pdfBase64 = response.data.data.replace(/-/g, '+').replace(/_/g, '/');
                     resolve(pdfBase64);
